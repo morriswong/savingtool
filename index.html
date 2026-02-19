@@ -53,6 +53,9 @@
     ::-webkit-scrollbar-track { background: #0a0f1e; }
     ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
     input[type=range] { accent-color: #10b981; }
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance: textfield; }
     .card {
       background: #111827;
       border: 1px solid #1e293b;
@@ -553,22 +556,30 @@ function App() {
 
   const NumInput = ({ value, onChange, prefix = '£', suffix, min = 0, max, step = 1, style }) => {
     const [local, setLocal] = useState(String(value));
-    useEffect(() => { setLocal(String(value)); }, [value]);
+    const [focused, setFocused] = useState(false);
+    useEffect(() => { if (!focused) setLocal(String(value)); }, [value, focused]);
     return (
       <div style={{ position: 'relative', ...style }}>
         {prefix && <span className="input-prefix">{prefix}</span>}
         <input
-          type="number"
+          type="text"
+          inputMode="numeric"
           className="input-field"
           style={{ paddingLeft: prefix ? '1.8rem' : '0.9rem', paddingRight: suffix ? '2rem' : '0.9rem' }}
           value={local}
-          min={min} max={max} step={step}
           onChange={e => {
-            setLocal(e.target.value);
-            const v = parseFloat(e.target.value);
-            if (!isNaN(v) && v >= (min || 0)) onChange(v);
+            const raw = e.target.value.replace(/[^0-9.]/g, '');
+            setLocal(raw);
+            const v = parseFloat(raw);
+            if (!isNaN(v)) {
+              const clamped = max !== undefined ? Math.min(v, max) : v;
+              if (clamped >= (min || 0)) onChange(clamped);
+            } else if (raw === '' || raw === '.') {
+              onChange(0);
+            }
           }}
-          onBlur={() => setLocal(String(value))}
+          onFocus={() => setFocused(true)}
+          onBlur={() => { setFocused(false); setLocal(String(value)); }}
         />
         {suffix && <span className="input-suffix">{suffix}</span>}
       </div>
