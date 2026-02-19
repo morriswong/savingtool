@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IR35 Calculator 2025/26 – Inside vs Outside | SavingTool</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/recharts@2.12.7/umd/Recharts.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sora: ['Sora', 'sans-serif'],
+            mono: ['IBM Plex Mono', 'monospace'],
+          },
+          colors: {
+            navy: '#0a0f1e',
+            surface: '#111827',
+            border: '#1e293b',
+            emerald: { DEFAULT: '#10b981', 500: '#10b981' },
+            cyan: { DEFAULT: '#06b6d4', 500: '#06b6d4' },
+            slate: { 100: '#f1f5f9', 400: '#94a3b8', 700: '#334155', 800: '#1e293b', 900: '#0f172a' },
+            rose: { DEFAULT: '#f43f5e', 500: '#f43f5e' },
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Sora', sans-serif; background: #0a0f1e; color: #f1f5f9; min-height: 100vh; }
+    .mono { font-family: 'IBM Plex Mono', monospace; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0a0f1e; }
+    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
+    input[type=range] { accent-color: #10b981; }
+    .card { background: #111827; border: 1px solid #1e293b; border-radius: 12px; padding: 1.5rem; }
+    .card-sm { background: #111827; border: 1px solid #1e293b; border-radius: 12px; padding: 1rem; }
+    .input-field {
+      background: #0a0f1e; border: 1px solid #1e293b; border-radius: 8px;
+      color: #f1f5f9; font-family: 'IBM Plex Mono', monospace; font-size: 0.95rem;
+      padding: 0.6rem 0.9rem; width: 100%; outline: none; transition: border-color 0.2s;
+    }
+    .input-field:focus { border-color: #10b981; }
+    .input-field::placeholder { color: #334155; }
+    .input-prefix { position: absolute; left: 0.9rem; top: 50%; transform: translateY(-50%); color: #94a3b8; font-family: 'IBM Plex Mono', monospace; pointer-events: none; }
+    .input-suffix { position: absolute; right: 0.9rem; top: 50%; transform: translateY(-50%); color: #94a3b8; font-family: 'IBM Plex Mono', monospace; pointer-events: none; }
+    .select-field {
+      background: #0a0f1e; border: 1px solid #1e293b; border-radius: 8px;
+      color: #f1f5f9; font-family: 'Sora', sans-serif; font-size: 0.85rem;
+      padding: 0.6rem 0.9rem; width: 100%; outline: none; cursor: pointer;
+      appearance: none; -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 0.9rem center; padding-right: 2.2rem;
+    }
+    .select-field:focus { border-color: #10b981; }
+    .toggle { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider { position: absolute; cursor: pointer; inset: 0; background: #1e293b; border-radius: 24px; transition: 0.3s; }
+    .toggle-slider:before { content: ''; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; background: #94a3b8; border-radius: 50%; transition: 0.3s; }
+    .toggle input:checked + .toggle-slider { background: #10b981; }
+    .toggle input:checked + .toggle-slider:before { transform: translateX(20px); background: white; }
+    .badge { display: inline-block; background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); border-radius: 4px; font-size: 0.7rem; font-family: 'IBM Plex Mono', monospace; padding: 1px 6px; margin-left: 6px; white-space: nowrap; }
+    .nav-link { color: #94a3b8; font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: color 0.2s; }
+    .nav-link:hover { color: #f1f5f9; }
+    .section-title { font-family: 'Sora', sans-serif; font-size: 1rem; font-weight: 700; color: #f1f5f9; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+    .section-title::before { content: ''; display: block; width: 3px; height: 1.1em; background: #10b981; border-radius: 2px; }
+    .section-title.cyan-bar::before { background: #06b6d4; }
+    .section-title.rose-bar::before { background: #f43f5e; }
+    .breakdown-row { display: grid; grid-template-columns: 1fr auto; gap: 0.5rem; align-items: center; padding: 0.4rem 0.5rem; border-radius: 6px; transition: background 0.15s; }
+    .breakdown-row:hover { background: rgba(255,255,255,0.02); }
+    .breakdown-row.highlight { background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2); }
+    .breakdown-row.highlight-cyan { background: rgba(6,182,212,0.08); border: 1px solid rgba(6,182,212,0.2); }
+    .breakdown-row.deduct { opacity: 0.85; }
+    .breakdown-row.sub { padding-left: 1.2rem; }
+    .val-cell { font-family: 'IBM Plex Mono', monospace; font-size: 0.82rem; text-align: right; white-space: nowrap; }
+    .dropdown-menu { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 8px; background: #111827; border: 1px solid #1e293b; border-radius: 10px; padding: 0.5rem; min-width: 200px; z-index: 100; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+    .dropdown-item { padding: 0.5rem 0.75rem; border-radius: 6px; font-size: 0.82rem; color: #94a3b8; cursor: pointer; transition: all 0.15s; }
+    .dropdown-item:hover { background: rgba(255,255,255,0.05); color: #f1f5f9; }
+    .pill-toggle { display: flex; background: #0a0f1e; border: 1px solid #1e293b; border-radius: 8px; padding: 3px; gap: 3px; }
+    .pill-btn { flex: 1; padding: 0.35rem 0.75rem; border-radius: 6px; font-size: 0.8rem; font-family: 'Sora', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s; color: #94a3b8; border: none; background: none; }
+    .pill-btn.active { background: #10b981; color: #0a0f1e; font-weight: 700; }
+    .pill-btn.active-cyan { background: #06b6d4; color: #0a0f1e; font-weight: 700; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+    .fade-in { animation: fadeIn 0.3s ease; }
+    .stat-box { background: #0a0f1e; border: 1px solid #1e293b; border-radius: 10px; padding: 1rem; text-align: center; }
+    .winner-banner { background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(6,182,212,0.1)); border: 1px solid rgba(16,185,129,0.3); border-radius: 12px; padding: 1.5rem 2rem; text-align: center; }
+    .compare-table { width: 100%; border-collapse: collapse; }
+    .compare-table th { font-size: 0.78rem; font-weight: 600; color: #94a3b8; text-align: right; padding: 0.5rem 0.75rem; border-bottom: 1px solid #1e293b; }
+    .compare-table th:first-child { text-align: left; }
+    .compare-table td { font-family: 'IBM Plex Mono', monospace; font-size: 0.82rem; text-align: right; padding: 0.55rem 0.75rem; border-bottom: 1px solid rgba(30,41,59,0.5); color: #f1f5f9; }
+    .compare-table td:first-child { font-family: 'Sora', sans-serif; font-size: 0.82rem; color: #94a3b8; text-align: left; }
+    .compare-table tr:hover td { background: rgba(255,255,255,0.02); }
+    .sensitivity-tip { background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.2); border-radius: 8px; padding: 0.6rem 1rem; font-size: 0.78rem; color: #fbbf24; font-family: 'IBM Plex Mono', monospace; }
+    @media (max-width: 1100px) { .three-col { flex-direction: column !important; } .result-col { flex: 1 !important; min-width: 0 !important; } }
+    @media (max-width: 700px) { .two-results { flex-direction: column !important; } }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useMemo, useCallback, useRef, useEffect } = React;
+const { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } = Recharts;
+
+// ─── Formatting ────────────────────────────────────────────────────────────────
+const fmt = (n, d = 0) => '£' + Math.abs(n || 0).toLocaleString('en-GB', { minimumFractionDigits: d, maximumFractionDigits: d });
+const pct = (n, d = 1) => (n || 0).toFixed(d) + '%';
+const sign = (n) => n >= 0 ? '+' : '-';
+
+// ─── Tax Functions 2025/26 ─────────────────────────────────────────────────────
+function calcIncomeTax(gross, scotland) {
+  let pa = 12570;
+  if (gross > 100000) pa = Math.max(0, 12570 - Math.floor((gross - 100000) / 2));
+  const taxable = Math.max(0, gross - pa);
+  let tax = 0;
+  if (!scotland) {
+    const b1 = Math.max(0, Math.min(taxable, 50270 - pa));
+    const b2 = Math.max(0, Math.min(taxable - Math.max(0, 50270 - pa), 125140 - 50270));
+    const b3 = Math.max(0, taxable - Math.max(0, 125140 - pa));
+    tax = b1 * 0.20 + b2 * 0.40 + b3 * 0.45;
+  } else {
+    const bands = [
+      { limit: 2306,  rate: 0.19 },
+      { limit: 13685, rate: 0.20 },
+      { limit: 17101, rate: 0.21 },
+      { limit: 31338, rate: 0.42 },
+      { limit: 50140, rate: 0.45 },
+      { limit: Infinity, rate: 0.48 },
+    ];
+    let rem = taxable;
+    for (const b of bands) {
+      if (rem <= 0) break;
+      const chunk = Math.min(rem, b.limit);
+      tax += chunk * b.rate;
+      rem -= chunk;
+    }
+  }
+  return { tax: Math.max(0, tax), pa, taxable };
+}
+
+function calcEmployeeNI(gross) {
+  const lower = 12570, upper = 50270;
+  let ni = 0;
+  if (gross > lower) ni += Math.min(gross - lower, upper - lower) * 0.08;
+  if (gross > upper) ni += (gross - upper) * 0.02;
+  return Math.max(0, ni);
+}
+
+function calcEmployerNI(salary) {
+  return Math.max(0, (salary - 5000) * 0.15);
+}
+
+function calcStudentLoan(gross, plan) {
+  const thresholds = { '1': 24990, '2': 27295, '4': 31395, 'pg': 21000 };
+  const rates = { '1': 0.09, '2': 0.09, '4': 0.09, 'pg': 0.06 };
+  return Math.max(0, (gross - (thresholds[plan] || 27295)) * (rates[plan] || 0.09));
+}
+
+function calcDividendTax(dividends, otherIncome, scotland) {
+  // Dividend allowance £500
+  const divAllowance = 500;
+  // Other income uses up the bands first
+  let pa = 12570;
+  if (otherIncome > 100000) pa = Math.max(0, 12570 - Math.floor((otherIncome - 100000) / 2));
+  const basicTop = 50270;
+  const higherTop = 125140;
+
+  // How much of the basic/higher/additional bands remain after salary
+  const basicRemaining = Math.max(0, basicTop - Math.max(pa, otherIncome));
+  const higherRemaining = Math.max(0, higherTop - Math.max(basicTop, otherIncome));
+  const aboveHRT = Math.max(0, dividends - divAllowance - basicRemaining - higherRemaining);
+
+  const taxableDivs = Math.max(0, dividends - divAllowance);
+  let tax = 0;
+  let remaining = taxableDivs;
+
+  const inBasic = Math.min(remaining, basicRemaining);
+  remaining -= inBasic;
+  const inHigher = Math.min(remaining, higherRemaining);
+  remaining -= inHigher;
+  const inAdditional = remaining;
+
+  tax = inBasic * 0.0875 + inHigher * 0.3375 + inAdditional * 0.3935;
+  return Math.max(0, tax);
+}
+
+function calcCorpTax(profit) {
+  if (profit <= 0) return 0;
+  if (profit <= 50000) return profit * 0.19;
+  if (profit >= 250000) return profit * 0.25;
+  // Marginal relief between £50k–£250k
+  const fullTax = profit * 0.25;
+  const marginalRelief = (250000 - profit) * ((profit - 50000) / 200000) * 0.015;
+  // Standard formula: F - (F - S) × (U - N) / (U - L) where F=0.25, S=0.19, U=250k, L=50k
+  const f = profit * 0.25;
+  const relief = (250000 - profit) * 3 / 200;
+  return Math.max(0, f - relief);
+}
+
+// ─── Inside IR35 Calculation ───────────────────────────────────────────────────
+function calcInside({ dayRate, workingDays, pensionPct, umbrellaMarginWeekly, umbrellaFeesWeekly, scotland, studentLoan, loanPlan }) {
+  const grossIncome = dayRate * workingDays;
+  const umbrellaMarginAnnual = umbrellaMarginWeekly * 52;
+  const umbrellaFeesAnnual = umbrellaFeesWeekly * 52;
+  const afterMarginFees = grossIncome - umbrellaMarginAnnual - umbrellaFeesAnnual;
+
+  // Pension via salary sacrifice (before employer NI)
+  const pensionAmt = afterMarginFees * (pensionPct / 100);
+  const afterPension = afterMarginFees - pensionAmt;
+
+  // Employer NI (15% above £5,000 secondary threshold)
+  const empNI = calcEmployerNI(afterPension);
+  // Apprenticeship levy 0.5% on all
+  const appLevy = afterPension * 0.005;
+  // Taxable pay (what employee receives)
+  const taxableIncome = afterPension - empNI - appLevy;
+
+  const { tax } = calcIncomeTax(taxableIncome, scotland);
+  const employeeNI = calcEmployeeNI(taxableIncome);
+  const slAmt = studentLoan ? calcStudentLoan(taxableIncome, loanPlan) : 0;
+
+  const netTakeHome = taxableIncome - tax - employeeNI - slAmt;
+  const hmrcTotal = empNI + appLevy + tax + employeeNI + slAmt;
+  const effectiveRate = grossIncome > 0 ? ((hmrcTotal + umbrellaMarginAnnual + umbrellaFeesAnnual) / grossIncome) * 100 : 0;
+
+  return {
+    grossIncome, umbrellaMarginAnnual, umbrellaFeesAnnual, afterMarginFees,
+    pensionAmt, afterPension, empNI, appLevy, taxableIncome,
+    tax, employeeNI, slAmt, netTakeHome, hmrcTotal, effectiveRate,
+  };
+}
+
+// ─── Outside IR35 Calculation ──────────────────────────────────────────────────
+function calcOutside({ dayRate, workingDays, pensionPct, salary, businessExpenses, dividendMode, dividendValue, scotland, studentLoan, loanPlan }) {
+  const baseRevenue = dayRate * workingDays;
+
+  // SIPP/pension from company (employer pension contribution — not salary sacrifice here, from company profits)
+  // We treat pension as a company expense paid before corp tax
+  const pensionAmt = baseRevenue * (pensionPct / 100);
+
+  // Employer NI on salary
+  const empNIOnSalary = calcEmployerNI(salary);
+
+  // Company P&L
+  const companyRevenue = baseRevenue;
+  const companyCosts = salary + empNIOnSalary + businessExpenses + pensionAmt;
+  const profitBeforeCorpTax = Math.max(0, companyRevenue - companyCosts);
+  const corpTax = calcCorpTax(profitBeforeCorpTax);
+  const availableForDividends = profitBeforeCorpTax - corpTax;
+
+  // How many dividends taken
+  let dividendsTaken = 0;
+  if (dividendMode === 'pct') {
+    dividendsTaken = availableForDividends * (dividendValue / 100);
+  } else {
+    dividendsTaken = Math.min(dividendValue, availableForDividends);
+  }
+  dividendsTaken = Math.max(0, dividendsTaken);
+
+  // Personal income
+  const personalGross = salary + dividendsTaken;
+
+  // Income tax on salary portion
+  const { tax: salaryTax } = calcIncomeTax(salary, scotland);
+  const employeeNI = calcEmployeeNI(salary);
+  const divTax = calcDividendTax(dividendsTaken, salary, scotland);
+  const slAmt = studentLoan ? calcStudentLoan(personalGross, loanPlan) : 0;
+
+  const netTakeHome = salary - salaryTax - employeeNI + dividendsTaken - divTax - slAmt;
+  const hmrcTotal = corpTax + salaryTax + employeeNI + empNIOnSalary + divTax + slAmt;
+  const effectiveRate = baseRevenue > 0 ? (hmrcTotal / baseRevenue) * 100 : 0;
+
+  return {
+    baseRevenue, pensionAmt, salary, empNIOnSalary, businessExpenses,
+    companyRevenue, profitBeforeCorpTax, corpTax, availableForDividends,
+    dividendsTaken, personalGross, salaryTax, employeeNI, divTax, slAmt,
+    netTakeHome, hmrcTotal, effectiveRate,
+  };
+}
+
+// ─── Components ────────────────────────────────────────────────────────────────
+function NumInput({ value, onChange, prefix = '£', suffix, min = 0, max, step = 1, disabled }) {
+  const [local, setLocal] = useState(String(value));
+  useEffect(() => { setLocal(String(value)); }, [value]);
+  return (
+    <div style={{ position: 'relative' }}>
+      {prefix && <span className="input-prefix" style={{ opacity: disabled ? 0.4 : 1 }}>{prefix}</span>}
+      <input
+        type="number"
+        className="input-field"
+        style={{ paddingLeft: prefix ? '1.8rem' : '0.9rem', paddingRight: suffix ? '2.2rem' : '0.9rem', opacity: disabled ? 0.5 : 1, cursor: disabled ? 'not-allowed' : 'auto' }}
+        value={local}
+        min={min} max={max} step={step}
+        disabled={disabled}
+        onChange={e => {
+          setLocal(e.target.value);
+          const v = parseFloat(e.target.value);
+          if (!isNaN(v)) onChange(v);
+        }}
+        onBlur={() => setLocal(String(value))}
+      />
+      {suffix && <span className="input-suffix" style={{ opacity: disabled ? 0.4 : 1 }}>{suffix}</span>}
+    </div>
+  );
+}
+
+function Toggle({ checked, onChange }) {
+  return (
+    <label className="toggle">
+      <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} />
+      <span className="toggle-slider" />
+    </label>
+  );
+}
+
+function PillToggle({ options, value, onChange, colorClass }) {
+  return (
+    <div className="pill-toggle">
+      {options.map(opt => (
+        <button
+          key={opt.value}
+          className={`pill-btn ${value === opt.value ? (colorClass || 'active') : ''}`}
+          onClick={() => onChange(opt.value)}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function BRow({ label, value, color, indent, highlight, highlightCyan, bold, subdue, deductColor }) {
+  return (
+    <div className={`breakdown-row${highlight ? ' highlight' : ''}${highlightCyan ? ' highlight-cyan' : ''}${indent ? ' sub' : ''}`}
+         style={{ opacity: subdue ? 0.6 : 1 }}>
+      <div style={{ fontSize: '0.8rem', color: subdue ? '#64748b' : '#94a3b8', fontWeight: bold || highlight || highlightCyan ? 600 : 400 }}>
+        {indent && <span style={{ color: '#334155', marginRight: '0.3rem' }}>└</span>}
+        {label}
+      </div>
+      <div className="val-cell" style={{ color: color || (highlight ? '#10b981' : highlightCyan ? '#06b6d4' : deductColor ? '#f43f5e' : '#f1f5f9'), fontWeight: bold || highlight || highlightCyan ? 700 : 400 }}>
+        {value}
+      </div>
+    </div>
+  );
+}
+
+function StatBox({ label, value, sub, color, size }) {
+  return (
+    <div className="stat-box">
+      <div style={{ fontSize: '0.72rem', color: '#64748b', fontFamily: 'Sora', marginBottom: '0.3rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
+      <div style={{ fontFamily: 'IBM Plex Mono', fontWeight: 700, fontSize: size || '1.4rem', color: color || '#f1f5f9', lineHeight: 1.1 }}>{value}</div>
+      {sub && <div style={{ fontSize: '0.72rem', color: '#64748b', fontFamily: 'IBM Plex Mono', marginTop: '0.2rem' }}>{sub}</div>}
+    </div>
+  );
+}
+
+// ─── Main App ──────────────────────────────────────────────────────────────────
+function App() {
+  const [navOpen, setNavOpen] = useState(false);
+
+  // Mode
+  const [rateMode, setRateMode] = useState('single'); // 'single' | 'separate'
+  const [dayRate, setDayRate] = useState(500);
+  const [dayRateInside, setDayRateInside] = useState(500);
+  const [dayRateOutside, setDayRateOutside] = useState(500);
+  const [workingDays, setWorkingDays] = useState(220);
+
+  // Pension
+  const [pensionMode, setPensionMode] = useState('pct'); // 'pct' | 'day'
+  const [pensionPct, setPensionPct] = useState(15);
+  const [pensionDayAmt, setPensionDayAmt] = useState(75);
+
+  // Shared toggles
+  const [scotland, setScotland] = useState(false);
+  const [studentLoan, setStudentLoan] = useState(false);
+  const [loanPlan, setLoanPlan] = useState('2');
+
+  // Inside specifics
+  const [umbrellaMargin, setUmbrellaMargin] = useState(25);
+  const [umbrellaFees, setUmbrellaFees] = useState(6);
+
+  // Outside specifics
+  const [ltdSalary, setLtdSalary] = useState(12570);
+  const [businessExpenses, setBusinessExpenses] = useState(2000);
+  const [dividendMode, setDividendMode] = useState('pct'); // 'pct' | 'amount'
+  const [dividendPct, setDividendPct] = useState(100);
+  const [dividendAmount, setDividendAmount] = useState(50000);
+
+  // Effective pension % based on mode
+  const effectivePensionPct = useMemo(() => {
+    if (pensionMode === 'pct') return pensionPct;
+    const annualPension = pensionDayAmt * workingDays;
+    const grossIncome = dayRate * workingDays;
+    return grossIncome > 0 ? (annualPension / grossIncome) * 100 : 0;
+  }, [pensionMode, pensionPct, pensionDayAmt, workingDays, dayRate]);
+
+  const insideDayRate = rateMode === 'single' ? dayRate : dayRateInside;
+  const outsideDayRate = rateMode === 'single' ? dayRate : dayRateOutside;
+
+  // ── Calculations ────────────────────────────────────────────────────────────
+  const insideResult = useMemo(() => calcInside({
+    dayRate: insideDayRate, workingDays, pensionPct: effectivePensionPct,
+    umbrellaMarginWeekly: umbrellaMargin, umbrellaFeesWeekly: umbrellaFees,
+    scotland, studentLoan, loanPlan,
+  }), [insideDayRate, workingDays, effectivePensionPct, umbrellaMargin, umbrellaFees, scotland, studentLoan, loanPlan]);
+
+  const outsideResult = useMemo(() => calcOutside({
+    dayRate: outsideDayRate, workingDays, pensionPct: effectivePensionPct,
+    salary: ltdSalary, businessExpenses,
+    dividendMode, dividendValue: dividendMode === 'pct' ? dividendPct : dividendAmount,
+    scotland, studentLoan, loanPlan,
+  }), [outsideDayRate, workingDays, effectivePensionPct, ltdSalary, businessExpenses, dividendMode, dividendPct, dividendAmount, scotland, studentLoan, loanPlan]);
+
+  const difference = outsideResult.netTakeHome - insideResult.netTakeHome;
+  const outsideWins = difference > 0;
+
+  // ── Sensitivity chart data ──────────────────────────────────────────────────
+  const sensitivityData = useMemo(() => {
+    const data = [];
+    for (let dr = 200; dr <= 1000; dr += 50) {
+      const inside = calcInside({
+        dayRate: dr, workingDays, pensionPct: effectivePensionPct,
+        umbrellaMarginWeekly: umbrellaMargin, umbrellaFeesWeekly: umbrellaFees,
+        scotland, studentLoan, loanPlan,
+      });
+      const outside = calcOutside({
+        dayRate: dr, workingDays, pensionPct: effectivePensionPct,
+        salary: ltdSalary, businessExpenses,
+        dividendMode, dividendValue: dividendMode === 'pct' ? dividendPct : dividendAmount,
+        scotland, studentLoan, loanPlan,
+      });
+      data.push({ dayRate: dr, inside: Math.round(inside.netTakeHome), outside: Math.round(outside.netTakeHome) });
+    }
+    return data;
+  }, [workingDays, effectivePensionPct, umbrellaMargin, umbrellaFees, ltdSalary, businessExpenses, dividendMode, dividendPct, dividendAmount, scotland, studentLoan, loanPlan]);
+
+  // Find crossover
+  const crossover = useMemo(() => {
+    for (let i = 1; i < sensitivityData.length; i++) {
+      const prev = sensitivityData[i - 1];
+      const curr = sensitivityData[i];
+      if ((prev.outside - prev.inside) * (curr.outside - curr.inside) <= 0) {
+        return Math.round((prev.dayRate + curr.dayRate) / 2);
+      }
+    }
+    return null;
+  }, [sensitivityData]);
+
+  const customTooltip = ({ active, payload, label }) => {
+    if (!active || !payload?.length) return null;
+    return (
+      <div style={{ background: '#111827', border: '1px solid #1e293b', borderRadius: 8, padding: '0.75rem 1rem', fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.78rem' }}>
+        <div style={{ color: '#94a3b8', marginBottom: '0.4rem', fontFamily: 'Sora, sans-serif', fontSize: '0.8rem' }}>Day Rate: £{label}</div>
+        {payload.map(p => (
+          <div key={p.dataKey} style={{ color: p.color, marginBottom: '0.2rem' }}>
+            {p.name}: {fmt(p.value)}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  return (
+    <div style={{ minHeight: '100vh', background: '#0a0f1e' }}>
+      {/* ── Navigation ── */}
+      <nav style={{ background: 'rgba(17,24,39,0.95)', borderBottom: '1px solid #1e293b', position: 'sticky', top: 0, zIndex: 50, backdropFilter: 'blur(12px)' }}>
+        <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 60 }}>
+          <a href="index.html" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', textDecoration: 'none' }}>
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <path d="M11 2L3 7v8l8 5 8-5V7L11 2z" stroke="#10b981" strokeWidth="1.8" fill="none"/>
+              <path d="M11 6v10M7 8.5l4 2.5 4-2.5" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+            <span style={{ fontFamily: 'Sora, sans-serif', fontWeight: 700, fontSize: '1.1rem', color: '#f1f5f9' }}>
+              Saving<span style={{ color: '#10b981' }}>Tool</span>
+            </span>
+          </a>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.75rem' }}>
+            <a href="index.html" className="nav-link" style={{ textDecoration: 'none' }}>Home</a>
+            <div style={{ position: 'relative' }} onMouseEnter={() => setNavOpen(true)} onMouseLeave={() => setNavOpen(false)}>
+              <span className="nav-link" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                Calculators
+                <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 3l3 4 3-4" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round"/></svg>
+              </span>
+              {navOpen && (
+                <div className="dropdown-menu">
+                  {[
+                    { label: 'Salary & Tax', href: 'index.html' },
+                    { label: 'IR35 Calculator', href: 'ir35-calculator.html' },
+                    { label: 'ISA Bridging', href: 'isa-bridging-calculator.html' },
+                    { label: 'Mortgage Calculator', href: 'mortgage-calculator.html' },
+                  ].map(item => (
+                    <a key={item.label} href={item.href} className="dropdown-item" style={{ display: 'block', textDecoration: 'none' }}>{item.label}</a>
+                  ))}
+                </div>
+              )}
+            </div>
+            <span className="nav-link">Blog</span>
+            <span style={{ background: 'rgba(16,185,129,0.15)', color: '#10b981', border: '1px solid rgba(16,185,129,0.3)', borderRadius: 5, padding: '3px 10px', fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.08em', cursor: 'pointer' }}>
+              ADVANCED
+            </span>
+          </div>
+        </div>
+      </nav>
+
+      {/* ── Hero ── */}
+      <div style={{ maxWidth: 1400, margin: '0 auto', padding: '2.5rem 1.5rem 0' }}>
+        <a href="index.html" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#94a3b8', fontSize: '0.82rem', textDecoration: 'none', marginBottom: '1.25rem', transition: 'color 0.2s' }}
+           onMouseEnter={e => e.currentTarget.style.color='#10b981'} onMouseLeave={e => e.currentTarget.style.color='#94a3b8'}>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          All Calculators
+        </a>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+          <div>
+            <h1 style={{ fontFamily: 'Sora, sans-serif', fontSize: 'clamp(1.4rem, 3vw, 2rem)', fontWeight: 800, color: '#f1f5f9', lineHeight: 1.2 }}>
+              UK IR35 Calculator <span style={{ color: '#10b981' }}>2025/26</span>
+            </h1>
+            <p style={{ color: '#94a3b8', marginTop: '0.4rem', fontSize: '0.88rem', maxWidth: 600 }}>
+              Compare Inside IR35 (umbrella) vs Outside IR35 (limited company) take-home pay with real-time UK tax calculations.
+            </p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 8, padding: '0.4rem 0.8rem', flexShrink: 0 }}>
+            <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontFamily: 'Sora' }}>Rate mode:</span>
+            <PillToggle
+              options={[{ value: 'single', label: 'Single Rate' }, { value: 'separate', label: 'Separate Rates' }]}
+              value={rateMode}
+              onChange={setRateMode}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div style={{ maxWidth: 1400, margin: '1.5rem auto 0', padding: '0 1.5rem 4rem' }}>
+
+        {/* ── INPUTS ROW ── */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1.25rem', marginBottom: '1.5rem' }} className="three-col">
+
+          {/* Inside Inputs */}
+          <div className="card fade-in" style={{ borderTop: '2px solid #10b981' }}>
+            <div className="section-title">Inside IR35 <span style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 400, marginLeft: '0.25rem' }}>Umbrella</span></div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
+              {rateMode === 'single' ? (
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', color: '#94a3b8', marginBottom: '0.35rem' }}>Day Rate (£/day)</label>
+                  <NumInput value={dayRate} onChange={setDayRate} min={0} step={25} />
+                </div>
+              ) : (
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', color: '#94a3b8', marginBottom: '0.35rem' }}>Inside Day Rate (£/day)</label>
+                  <NumInput value={dayRateInside} onChange={setDayRateInside} min={0} step={25} />
+                </div>
+              )}
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.78rem', color: '#94a3b8', marginBottom: '0.35rem' }}>Umbrella Margin (£/week)</label>
+                <NumInput value={umbrellaMargin} onChange={setUmbrellaMargin} min={0} step={1} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.78rem', color: '#94a3b8', marginBottom: '0.35rem' }}>Umbrella Fees (£/week)</label>
+                <NumInput value={umbrellaFees} onChange={setUmbrellaFees} min={0} step={1} />
+              </div>
+
+              <div style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.15)', borderRadius: 8, padding: '0.75rem' }}>
+                <div style={{ fontSize: '0.72rem', color: '#64748b', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Umbrella Costs/Year</div>
+                <div style={{ fontFamily: 'IBM Plex Mono', fontSize: '0.9rem', color: '#f43f5e' }}>
+                  -{fmt(umbrellaMargin * 52 + umbrellaFees * 52)}
+                </div>
+                <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.2rem', fontFamily: 'IBM Plex Mono' }}>
+                  {fmt(umbrellaMargin * 52)} margin + {fmt(umbrellaFees * 52)} fees
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Shared Inputs */}
+          <div className="card fade-in" style={{ borderTop: '2px solid #06b6d4' }}>
+            <div className="section-title cyan-bar">Shared Inputs</div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.78rem', color: '#94a3b8', marginBottom: '0.35rem' }}>Working Days / Year</label>
+                <NumInput value={workingDays} onChange={setWorkingDays} min={1} max={260} step={1} />
+              </div>
+
+              {/* Pension */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <label style={{ fontSize: '0.78rem', color: '#94a3b8' }}>Pension Contribution</label>
+                  <PillToggle
+                    options={[{ value: 'pct', label: '%' }, { value: 'day', label: '£/day' }]}
+                    value={pensionMode}
+                    onChange={setPensionMode}
+                    colorClass="active-cyan"
+                  />
+                </div>
+                {pensionMode === 'pct' ? (
+                  <NumInput value={pensionPct} onChange={v => setPensionPct(Math.min(100, v))} prefix="" suffix="%" min={0} max={100} step={0.5} />
+                ) : (
+                  <NumInput value={pensionDayAmt} onChange={setPensionDayAmt} min={0} step={5} />
+                )}
+                <div style={{ fontSize: '0.72rem', color: '#64748b', fontFamily: 'IBM Plex Mono', marginTop: '0.3rem' }}>
+                  ≈ {fmt(insideDayRate * workingDays * effectivePensionPct / 100)}/yr ({pct(effectivePensionPct)})
+                </div>
+              </div>
+
+              {/* Scotland */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <label style={{ fontSize: '0.82rem', color: '#f1f5f9', fontWeight: 500 }}>Resident of Scotland?</label>
+                <Toggle checked={scotland} onChange={setScotland} />
+              </div>
+
+              {/* Student Loan */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: scotland && studentLoan ? '0.5rem' : 0 }}>
+                  <label style={{ fontSize: '0.82rem', color: '#f1f5f9', fontWeight: 500 }}>Student Loan</label>
+                  <Toggle checked={studentLoan} onChange={setStudentLoan} />
+                </div>
+                {studentLoan && (
+                  <div style={{ marginTop: '0.5rem' }}>
+                    <label style={{ display: 'block', fontSize: '0.78rem', color: '#94a3b8', marginBottom: '0.35rem' }}>Repayment Plan</label>
+                    <select className="select-field" value={loanPlan} onChange={e => setLoanPlan(e.target.value)}>
+                      <option value="1">Plan 1 (pre-2012, threshold £24,990)</option>
+                      <option value="2">Plan 2 (post-2012, threshold £27,295)</option>
+                      <option value="4">Plan 4 (Scotland, threshold £31,395)</option>
+                      <option value="pg">Postgrad (threshold £21,000)</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+
+              {/* Quick rate reference */}
+              <div style={{ background: '#0a0f1e', border: '1px solid #1e293b', borderRadius: 8, padding: '0.7rem' }}>
+                <div style={{ fontSize: '0.7rem', color: '#64748b', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Day rate reference</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem' }}>
+                  {[300, 400, 500, 600, 750, 1000].map(r => (
+                    <button key={r} onClick={() => { setDayRate(r); setDayRateInside(r); setDayRateOutside(r); }}
+                      style={{ background: (rateMode === 'single' ? dayRate : insideDayRate) === r ? 'rgba(6,182,212,0.15)' : '#0a0f1e', border: `1px solid ${(rateMode === 'single' ? dayRate : insideDayRate) === r ? '#06b6d4' : '#1e293b'}`, color: (rateMode === 'single' ? dayRate : insideDayRate) === r ? '#06b6d4' : '#64748b', borderRadius: 6, padding: '0.25rem 0.5rem', fontSize: '0.72rem', fontFamily: 'IBM Plex Mono', cursor: 'pointer' }}>
+                      £{r}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Outside Inputs */}
+          <div className="card fade-in" style={{ borderTop: '2px solid #06b6d4' }}>
+            <div className="section-title cyan-bar">Outside IR35 <span style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 400, marginLeft: '0.25rem' }}>Limited Co.</span></div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
+              {rateMode === 'separate' && (
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', color: '#94a3b8', marginBottom: '0.35rem' }}>Outside Day Rate (£/day)</label>
+                  <NumInput value={dayRateOutside} onChange={setDayRateOutside} min={0} step={25} />
+                </div>
+              )}
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.78rem', color: '#94a3b8', marginBottom: '0.35rem' }}>Annual Salary from Ltd Co (£)</label>
+                <NumInput value={ltdSalary} onChange={setLtdSalary} min={0} step={100} />
+                <div style={{ fontSize: '0.7rem', color: '#64748b', fontFamily: 'IBM Plex Mono', marginTop: '0.3rem' }}>
+                  Typically £12,570 (tax-free PA) or £9,100 (NI secondary threshold)
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.78rem', color: '#94a3b8', marginBottom: '0.35rem' }}>Annual Business Expenses (£)</label>
+                <NumInput value={businessExpenses} onChange={setBusinessExpenses} min={0} step={100} />
+              </div>
+
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <label style={{ fontSize: '0.78rem', color: '#94a3b8' }}>Dividends to Take</label>
+                  <PillToggle
+                    options={[{ value: 'pct', label: '% profit' }, { value: 'amount', label: '£ amount' }]}
+                    value={dividendMode}
+                    onChange={setDividendMode}
+                    colorClass="active-cyan"
+                  />
+                </div>
+                {dividendMode === 'pct' ? (
+                  <NumInput value={dividendPct} onChange={v => setDividendPct(Math.min(100, v))} prefix="" suffix="%" min={0} max={100} step={5} />
+                ) : (
+                  <NumInput value={dividendAmount} onChange={setDividendAmount} min={0} step={1000} />
+                )}
+                <div style={{ fontSize: '0.72rem', color: '#64748b', fontFamily: 'IBM Plex Mono', marginTop: '0.3rem' }}>
+                  ≈ {fmt(outsideResult.dividendsTaken)}/yr available: {fmt(outsideResult.availableForDividends)}
+                </div>
+              </div>
+
+              <div style={{ background: 'rgba(6,182,212,0.06)', border: '1px solid rgba(6,182,212,0.15)', borderRadius: 8, padding: '0.75rem' }}>
+                <div style={{ fontSize: '0.72rem', color: '#64748b', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Corp Tax Preview</div>
+                <div style={{ fontFamily: 'IBM Plex Mono', fontSize: '0.85rem', color: '#f43f5e' }}>-{fmt(outsideResult.corpTax)}</div>
+                <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.2rem', fontFamily: 'IBM Plex Mono' }}>
+                  on {fmt(outsideResult.profitBeforeCorpTax)} profit
+                  {outsideResult.profitBeforeCorpTax > 50000 && outsideResult.profitBeforeCorpTax < 250000 && <span style={{ color: '#fbbf24', marginLeft: '0.3rem' }}>(marginal relief)</span>}
+                  {outsideResult.profitBeforeCorpTax <= 50000 && <span style={{ color: '#10b981', marginLeft: '0.3rem' }}>(small profits 19%)</span>}
+                  {outsideResult.profitBeforeCorpTax >= 250000 && <span style={{ color: '#f43f5e', marginLeft: '0.3rem' }}>(main rate 25%)</span>}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── RESULTS: Stats + Breakdowns ── */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.5rem' }} className="two-results">
+
+          {/* Inside Result */}
+          <div className="card fade-in" style={{ borderTop: '3px solid #10b981' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <div>
+                <div style={{ fontSize: '0.72rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.2rem' }}>Inside IR35 – Umbrella</div>
+                <div style={{ fontFamily: 'IBM Plex Mono', fontWeight: 800, fontSize: '2rem', color: '#10b981', lineHeight: 1 }}>{fmt(insideResult.netTakeHome)}</div>
+                <div style={{ fontSize: '0.8rem', color: '#94a3b8', fontFamily: 'IBM Plex Mono', marginTop: '0.25rem' }}>
+                  {fmt(insideResult.netTakeHome / 12)}/mo &nbsp;·&nbsp; {fmt(insideResult.netTakeHome / workingDays, 0)}/day
+                </div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: '0.72rem', color: '#64748b', marginBottom: '0.2rem' }}>Effective rate</div>
+                <div style={{ fontFamily: 'IBM Plex Mono', fontWeight: 700, fontSize: '1.4rem', color: '#f43f5e' }}>{pct(insideResult.effectiveRate)}</div>
+                <div style={{ fontSize: '0.7rem', color: '#64748b', fontFamily: 'IBM Plex Mono' }}>of gross</div>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem', marginBottom: '1rem' }}>
+              <StatBox label="Monthly" value={fmt(insideResult.netTakeHome / 12)} color="#10b981" size="1rem" />
+              <StatBox label="To Pension" value={fmt(insideResult.pensionAmt)} color="#06b6d4" size="1rem" />
+              <StatBox label="HMRC Total" value={fmt(insideResult.hmrcTotal)} color="#f43f5e" size="1rem" />
+            </div>
+
+            <div style={{ borderTop: '1px solid #1e293b', paddingTop: '0.75rem' }}>
+              <div style={{ fontSize: '0.72rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.5rem' }}>Breakdown</div>
+
+              <BRow label="Gross Income" value={fmt(insideResult.grossIncome)} bold />
+              <BRow label={`Less Umbrella Margin (${fmt(umbrellaMargin)}/wk × 52)`} value={`-${fmt(insideResult.umbrellaMarginAnnual)}`} indent subdue deductColor />
+              <BRow label={`Less Umbrella Fees (${fmt(umbrellaFees)}/wk × 52)`} value={`-${fmt(insideResult.umbrellaFeesAnnual)}`} indent subdue deductColor />
+              <BRow label="After Margin & Fees" value={fmt(insideResult.afterMarginFees)} bold />
+              <BRow label={`Less Pension Sacrifice (${pct(effectivePensionPct)})`} value={`-${fmt(insideResult.pensionAmt)}`} indent color="#06b6d4" />
+              <BRow label="After Pension" value={fmt(insideResult.afterPension)} />
+              <BRow label="Less Employer NI (15% above £5k)" value={`-${fmt(insideResult.empNI)}`} indent deductColor />
+              <BRow label="Less Apprenticeship Levy (0.5%)" value={`-${fmt(insideResult.appLevy)}`} indent deductColor subdue />
+              <BRow label="Taxable Income" value={fmt(insideResult.taxableIncome)} bold />
+              <BRow label="Less Income Tax" value={`-${fmt(insideResult.tax)}`} indent deductColor />
+              <BRow label="Less Employee NI" value={`-${fmt(insideResult.employeeNI)}`} indent deductColor />
+              {insideResult.slAmt > 0 && <BRow label="Less Student Loan" value={`-${fmt(insideResult.slAmt)}`} indent deductColor />}
+              <div style={{ height: '1px', background: '#1e293b', margin: '0.35rem 0' }} />
+              <BRow label="Net Take-Home" value={fmt(insideResult.netTakeHome)} highlight />
+            </div>
+          </div>
+
+          {/* Outside Result */}
+          <div className="card fade-in" style={{ borderTop: '3px solid #06b6d4' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <div>
+                <div style={{ fontSize: '0.72rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.2rem' }}>Outside IR35 – Limited Company</div>
+                <div style={{ fontFamily: 'IBM Plex Mono', fontWeight: 800, fontSize: '2rem', color: '#06b6d4', lineHeight: 1 }}>{fmt(outsideResult.netTakeHome)}</div>
+                <div style={{ fontSize: '0.8rem', color: '#94a3b8', fontFamily: 'IBM Plex Mono', marginTop: '0.25rem' }}>
+                  {fmt(outsideResult.netTakeHome / 12)}/mo &nbsp;·&nbsp; {fmt(outsideResult.netTakeHome / workingDays, 0)}/day
+                </div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: '0.72rem', color: '#64748b', marginBottom: '0.2rem' }}>Effective rate</div>
+                <div style={{ fontFamily: 'IBM Plex Mono', fontWeight: 700, fontSize: '1.4rem', color: '#f43f5e' }}>{pct(outsideResult.effectiveRate)}</div>
+                <div style={{ fontSize: '0.7rem', color: '#64748b', fontFamily: 'IBM Plex Mono' }}>of gross</div>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem', marginBottom: '1rem' }}>
+              <StatBox label="Monthly" value={fmt(outsideResult.netTakeHome / 12)} color="#06b6d4" size="1rem" />
+              <StatBox label="To Pension" value={fmt(outsideResult.pensionAmt)} color="#06b6d4" size="1rem" />
+              <StatBox label="HMRC Total" value={fmt(outsideResult.hmrcTotal)} color="#f43f5e" size="1rem" />
+            </div>
+
+            <div style={{ borderTop: '1px solid #1e293b', paddingTop: '0.75rem' }}>
+              <div style={{ fontSize: '0.72rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.5rem' }}>Breakdown</div>
+
+              <div style={{ fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '0.3rem 0.5rem', marginBottom: '0.2rem' }}>Company P&L</div>
+              <BRow label="Base Revenue" value={fmt(outsideResult.baseRevenue)} bold />
+              <BRow label={`Less Pension/SIPP (${pct(effectivePensionPct)})`} value={`-${fmt(outsideResult.pensionAmt)}`} indent color="#06b6d4" />
+              <BRow label={`Less Salary (${fmt(ltdSalary)})`} value={`-${fmt(outsideResult.salary)}`} indent deductColor />
+              <BRow label="Less Employer NI on Salary" value={`-${fmt(outsideResult.empNIOnSalary)}`} indent deductColor subdue />
+              <BRow label="Less Business Expenses" value={`-${fmt(outsideResult.businessExpenses)}`} indent deductColor subdue />
+              <BRow label="Profit Before Corp Tax" value={fmt(outsideResult.profitBeforeCorpTax)} bold />
+              <BRow label={`Less Corporation Tax`} value={`-${fmt(outsideResult.corpTax)}`} indent deductColor />
+              <BRow label="Available for Dividends" value={fmt(outsideResult.availableForDividends)} />
+              <BRow label={`Dividends Taken (${dividendMode === 'pct' ? pct(dividendPct) : fmt(outsideResult.dividendsTaken)})`} value={fmt(outsideResult.dividendsTaken)} indent color="#06b6d4" />
+
+              <div style={{ height: '1px', background: '#1e293b', margin: '0.35rem 0' }} />
+              <div style={{ fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '0.3rem 0.5rem', marginBottom: '0.2rem' }}>Personal Tax</div>
+              <BRow label={`Salary (${fmt(ltdSalary)}) + Dividends`} value={fmt(outsideResult.personalGross)} bold />
+              <BRow label="Less Income Tax on Salary" value={`-${fmt(outsideResult.salaryTax)}`} indent deductColor />
+              <BRow label="Less Employee NI on Salary" value={`-${fmt(outsideResult.employeeNI)}`} indent deductColor />
+              <BRow label="Less Dividend Tax" value={`-${fmt(outsideResult.divTax)}`} indent deductColor />
+              {outsideResult.slAmt > 0 && <BRow label="Less Student Loan" value={`-${fmt(outsideResult.slAmt)}`} indent deductColor />}
+              <div style={{ height: '1px', background: '#1e293b', margin: '0.35rem 0' }} />
+              <BRow label="Net Take-Home" value={fmt(outsideResult.netTakeHome)} highlightCyan />
+            </div>
+          </div>
+        </div>
+
+        {/* ── COMPARISON SECTION ── */}
+        <div className="card fade-in" style={{ marginBottom: '1.5rem' }}>
+          {/* Winner Banner */}
+          <div className="winner-banner" style={{ marginBottom: '1.5rem', borderColor: outsideWins ? 'rgba(16,185,129,0.3)' : 'rgba(6,182,212,0.3)', background: outsideWins ? 'linear-gradient(135deg, rgba(16,185,129,0.12), rgba(6,182,212,0.08))' : 'linear-gradient(135deg, rgba(6,182,212,0.12), rgba(16,185,129,0.08))' }}>
+            <div style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>
+              {Math.abs(difference) < 500 ? 'Near equal' : outsideWins ? 'Outside IR35 pays more' : 'Inside IR35 pays more'}
+            </div>
+            <div style={{ fontFamily: 'IBM Plex Mono', fontWeight: 800, fontSize: 'clamp(1.5rem, 3vw, 2.5rem)', color: outsideWins ? '#10b981' : '#06b6d4' }}>
+              {outsideWins ? 'Outside IR35' : 'Inside IR35'}
+              <span style={{ color: '#f1f5f9', fontWeight: 400, fontSize: '0.5em', marginLeft: '0.5rem' }}>pays</span>
+              <span style={{ color: outsideWins ? '#10b981' : '#06b6d4', marginLeft: '0.3rem' }}>{fmt(Math.abs(difference))}</span>
+              <span style={{ color: '#f1f5f9', fontWeight: 400, fontSize: '0.5em', marginLeft: '0.3rem' }}>more per year</span>
+            </div>
+            <div style={{ fontSize: '0.82rem', color: '#94a3b8', marginTop: '0.5rem', fontFamily: 'IBM Plex Mono' }}>
+              {fmt(Math.abs(difference) / 12)}/month &nbsp;·&nbsp; {fmt(Math.abs(difference) / workingDays, 0)}/day worked
+            </div>
+          </div>
+
+          {/* Comparison Table */}
+          <div style={{ overflowX: 'auto' }}>
+            <table className="compare-table">
+              <thead>
+                <tr>
+                  <th>Metric</th>
+                  <th style={{ color: '#10b981' }}>Inside IR35</th>
+                  <th style={{ color: '#06b6d4' }}>Outside IR35</th>
+                  <th>Difference</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  {
+                    label: 'Gross Revenue',
+                    inside: insideResult.grossIncome,
+                    outside: outsideResult.baseRevenue,
+                  },
+                  {
+                    label: 'Take-Home Pay',
+                    inside: insideResult.netTakeHome,
+                    outside: outsideResult.netTakeHome,
+                  },
+                  {
+                    label: 'To Pension',
+                    inside: insideResult.pensionAmt,
+                    outside: outsideResult.pensionAmt,
+                  },
+                  {
+                    label: 'Umbrella/Co Costs',
+                    inside: insideResult.umbrellaMarginAnnual + insideResult.umbrellaFeesAnnual,
+                    outside: outsideResult.businessExpenses,
+                  },
+                  {
+                    label: 'Total to HMRC',
+                    inside: insideResult.hmrcTotal,
+                    outside: outsideResult.hmrcTotal,
+                  },
+                  {
+                    label: 'Effective Rate',
+                    inside: null,
+                    outside: null,
+                    insideStr: pct(insideResult.effectiveRate),
+                    outsideStr: pct(outsideResult.effectiveRate),
+                    diffStr: pct(Math.abs(outsideResult.effectiveRate - insideResult.effectiveRate)),
+                    diffColor: insideResult.effectiveRate < outsideResult.effectiveRate ? '#f43f5e' : '#10b981',
+                    noDiff: false,
+                  },
+                ].map((row, i) => {
+                  const diff = row.inside !== null ? row.outside - row.inside : null;
+                  const betterOutside = diff !== null && diff > 0;
+                  return (
+                    <tr key={i}>
+                      <td>{row.label}</td>
+                      <td style={{ color: '#10b981' }}>{row.insideStr || fmt(row.inside)}</td>
+                      <td style={{ color: '#06b6d4' }}>{row.outsideStr || fmt(row.outside)}</td>
+                      <td style={{ color: row.diffColor || (diff === null ? '#94a3b8' : betterOutside ? '#10b981' : diff < 0 ? '#06b6d4' : '#94a3b8'), fontWeight: 600 }}>
+                        {row.diffStr || (diff === null ? '—' : `${diff >= 0 ? '+' : ''}${fmt(diff)}`)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* ── SENSITIVITY CHART ── */}
+        <div className="card fade-in">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <div>
+              <div className="section-title" style={{ marginBottom: '0.25rem' }}>Day Rate Sensitivity</div>
+              <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Take-home pay at different day rates (£200–£1,000/day)</div>
+            </div>
+            {crossover && (
+              <div className="sensitivity-tip">
+                Crossover ≈ £{crossover}/day — outside overtakes inside here
+              </div>
+            )}
+          </div>
+
+          <ResponsiveContainer width="100%" height={320}>
+            <LineChart data={sensitivityData} margin={{ top: 10, right: 20, left: 10, bottom: 10 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+              <XAxis
+                dataKey="dayRate"
+                stroke="#334155"
+                tick={{ fill: '#64748b', fontSize: 11, fontFamily: 'IBM Plex Mono' }}
+                tickFormatter={v => `£${v}`}
+              />
+              <YAxis
+                stroke="#334155"
+                tick={{ fill: '#64748b', fontSize: 11, fontFamily: 'IBM Plex Mono' }}
+                tickFormatter={v => `£${(v / 1000).toFixed(0)}k`}
+                width={50}
+              />
+              <Tooltip content={customTooltip} />
+              <Legend
+                wrapperStyle={{ fontSize: '0.82rem', fontFamily: 'Sora, sans-serif', paddingTop: '0.5rem' }}
+                formatter={(val) => <span style={{ color: '#94a3b8' }}>{val}</span>}
+              />
+              {crossover && (
+                <ReferenceLine x={crossover} stroke="#fbbf24" strokeDasharray="4 4" label={{ value: `£${crossover}`, fill: '#fbbf24', fontSize: 11, fontFamily: 'IBM Plex Mono' }} />
+              )}
+              <ReferenceLine x={rateMode === 'single' ? dayRate : insideDayRate} stroke="rgba(255,255,255,0.15)" strokeDasharray="3 3" />
+              <Line
+                type="monotone"
+                dataKey="inside"
+                name="Inside IR35"
+                stroke="#10b981"
+                strokeWidth={2.5}
+                dot={false}
+                activeDot={{ r: 5, fill: '#10b981' }}
+              />
+              <Line
+                type="monotone"
+                dataKey="outside"
+                name="Outside IR35"
+                stroke="#06b6d4"
+                strokeWidth={2.5}
+                dot={false}
+                activeDot={{ r: 5, fill: '#06b6d4' }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
+            <div style={{ fontSize: '0.78rem', color: '#94a3b8', fontFamily: 'Sora' }}>
+              <span style={{ display: 'inline-block', width: 24, height: 3, background: '#10b981', verticalAlign: 'middle', marginRight: 6, borderRadius: 2 }}></span>
+              Inside IR35 (Umbrella): <span style={{ color: '#10b981', fontFamily: 'IBM Plex Mono' }}>{fmt(insideResult.netTakeHome)}</span> at £{rateMode === 'single' ? dayRate : insideDayRate}/day
+            </div>
+            <div style={{ fontSize: '0.78rem', color: '#94a3b8', fontFamily: 'Sora' }}>
+              <span style={{ display: 'inline-block', width: 24, height: 3, background: '#06b6d4', verticalAlign: 'middle', marginRight: 6, borderRadius: 2 }}></span>
+              Outside IR35 (Ltd Co.): <span style={{ color: '#06b6d4', fontFamily: 'IBM Plex Mono' }}>{fmt(outsideResult.netTakeHome)}</span> at £{rateMode === 'single' ? dayRate : outsideDayRate}/day
+            </div>
+          </div>
+        </div>
+
+        {/* ── Footer disclaimer ── */}
+        <div style={{ marginTop: '2rem', padding: '1rem', borderTop: '1px solid #1e293b', display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ fontSize: '0.75rem', color: '#334155', maxWidth: 700 }}>
+            Calculations based on UK 2025/26 tax year rates. This calculator is for informational purposes only and does not constitute tax or financial advice. Always consult a qualified accountant or tax adviser regarding your IR35 status.
+          </div>
+          <div style={{ fontSize: '0.72rem', fontFamily: 'IBM Plex Mono', color: '#334155' }}>
+            SavingTool.co.uk &nbsp;·&nbsp; 2025/26
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

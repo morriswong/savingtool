@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>How Much Do I Need to Retire? | SavingTool UK 2025/26</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/recharts@2.12.7/umd/Recharts.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sora: ['Sora', 'sans-serif'],
+            mono: ['IBM Plex Mono', 'monospace'],
+          },
+          colors: {
+            navy: '#0a0f1e',
+            surface: '#111827',
+            border: '#1e293b',
+            emerald: { DEFAULT: '#10b981', 500: '#10b981' },
+            cyan: { DEFAULT: '#06b6d4', 500: '#06b6d4' },
+            slate: {
+              100: '#f1f5f9',
+              400: '#94a3b8',
+              700: '#334155',
+              800: '#1e293b',
+              900: '#0f172a',
+            },
+            rose: { DEFAULT: '#f43f5e', 500: '#f43f5e' },
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Sora', sans-serif;
+      background: #0a0f1e;
+      color: #f1f5f9;
+      min-height: 100vh;
+    }
+    .mono { font-family: 'IBM Plex Mono', monospace; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0a0f1e; }
+    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
+    input[type=range] { accent-color: #10b981; }
+    .card {
+      background: #111827;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+    .input-field {
+      background: #0a0f1e;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      color: #f1f5f9;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.95rem;
+      padding: 0.6rem 0.9rem;
+      width: 100%;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .input-field:focus { border-color: #10b981; }
+    .input-field::placeholder { color: #334155; }
+    .input-prefix {
+      position: absolute;
+      left: 0.9rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #94a3b8;
+      font-family: 'IBM Plex Mono', monospace;
+      pointer-events: none;
+    }
+    .input-suffix {
+      position: absolute;
+      right: 0.9rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #94a3b8;
+      font-family: 'IBM Plex Mono', monospace;
+      pointer-events: none;
+    }
+    .select-field {
+      background: #0a0f1e;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      color: #f1f5f9;
+      font-family: 'Sora', sans-serif;
+      font-size: 0.85rem;
+      padding: 0.6rem 0.9rem;
+      width: 100%;
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.9rem center;
+      padding-right: 2.2rem;
+    }
+    .select-field:focus { border-color: #10b981; }
+    .toggle {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background: #1e293b;
+      border-radius: 24px;
+      transition: 0.3s;
+    }
+    .toggle-slider:before {
+      content: '';
+      position: absolute;
+      width: 18px; height: 18px;
+      left: 3px; top: 3px;
+      background: #94a3b8;
+      border-radius: 50%;
+      transition: 0.3s;
+    }
+    .toggle input:checked + .toggle-slider { background: #10b981; }
+    .toggle input:checked + .toggle-slider:before {
+      transform: translateX(20px);
+      background: white;
+    }
+    .nav-link {
+      color: #94a3b8;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: color 0.2s;
+      text-decoration: none;
+    }
+    .nav-link:hover { color: #f1f5f9; }
+    .section-title {
+      font-family: 'Sora', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #f1f5f9;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .section-title::before {
+      content: '';
+      display: block;
+      width: 3px;
+      height: 1.1em;
+      background: #10b981;
+      border-radius: 2px;
+    }
+    .dropdown-menu {
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      margin-top: 8px;
+      background: #111827;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 0.5rem;
+      min-width: 220px;
+      z-index: 100;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+    .dropdown-item {
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      color: #94a3b8;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-decoration: none;
+      display: block;
+    }
+    .dropdown-item:hover { background: rgba(255,255,255,0.05); color: #f1f5f9; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+    .fade-in { animation: fadeIn 0.3s ease; }
+    @media (max-width: 1024px) {
+      .two-col { flex-direction: column !important; }
+    }
+    .mode-btn {
+      flex: 1;
+      padding: 0.65rem 1rem;
+      border-radius: 8px;
+      border: 1px solid #1e293b;
+      background: #0a0f1e;
+      color: #94a3b8;
+      font-size: 0.82rem;
+      font-family: 'Sora', sans-serif;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .mode-btn.active {
+      border-color: #10b981;
+      color: #10b981;
+      background: rgba(16,185,129,0.08);
+    }
+    .sens-row {
+      display: grid;
+      grid-template-columns: 1fr 1.1fr 0.9fr 0.7fr;
+      gap: 0.3rem;
+      align-items: center;
+      padding: 0.5rem 0.6rem;
+      border-radius: 6px;
+      transition: background 0.15s;
+    }
+    .sens-row:hover { background: rgba(255,255,255,0.02); }
+    .sens-row.highlight {
+      background: rgba(16,185,129,0.08);
+      border: 1px solid rgba(16,185,129,0.2);
+    }
+    .tooltip-wrap {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+    }
+    .tooltip-wrap .tt {
+      display: none;
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #111827;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 0.6rem 0.8rem;
+      font-size: 0.75rem;
+      color: #94a3b8;
+      white-space: normal;
+      width: 220px;
+      z-index: 200;
+      line-height: 1.5;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    }
+    .tooltip-wrap:hover .tt { display: block; }
+    .stat-box {
+      background: #0a0f1e;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+    }
+    .recharts-tooltip-wrapper .recharts-default-tooltip {
+      background: #111827 !important;
+      border: 1px solid #1e293b !important;
+      border-radius: 8px !important;
+    }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useMemo, useCallback, useRef, useEffect } = React;
+const {
+  AreaChart, Area, BarChart, Bar,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+  ResponsiveContainer, ReferenceLine
+} = Recharts;
+
+// ─── Formatting helpers ────────────────────────────────────────────────────────
+const fmt = (n, decimals = 0) =>
+  '£' + Math.abs(n).toLocaleString('en-GB', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+const fmtK = (n) => {
+  if (Math.abs(n) >= 1000000) return '£' + (n / 1000000).toFixed(2) + 'm';
+  if (Math.abs(n) >= 1000) return '£' + Math.round(n / 1000) + 'k';
+  return fmt(n);
+};
+
+// ─── UK Tax Calculations 2025/26 ──────────────────────────────────────────────
+function calcIncomeTax(gross, scotland) {
+  let pa = 12570;
+  if (gross > 100000) {
+    pa = Math.max(0, 12570 - Math.floor((gross - 100000) / 2));
+  }
+  const taxable = Math.max(0, gross - pa);
+  let tax = 0;
+  if (!scotland) {
+    const b1 = Math.max(0, Math.min(taxable, 50270 - pa));
+    const b2 = Math.max(0, Math.min(taxable - (50270 - pa), 125140 - 50270));
+    const b3 = Math.max(0, taxable - (125140 - pa));
+    tax = b1 * 0.20 + b2 * 0.40 + b3 * 0.45;
+  } else {
+    const bands = [
+      { limit: 2306,  rate: 0.19 },
+      { limit: 13685, rate: 0.20 },
+      { limit: 17101, rate: 0.21 },
+      { limit: 31338, rate: 0.42 },
+      { limit: 50140, rate: 0.45 },
+      { limit: Infinity, rate: 0.48 },
+    ];
+    let remaining = taxable;
+    for (const b of bands) {
+      if (remaining <= 0) break;
+      const chunk = Math.min(remaining, b.limit);
+      tax += chunk * b.rate;
+      remaining -= chunk;
+    }
+  }
+  return Math.max(0, tax);
+}
+
+function netIncome(gross, scotland) {
+  const tax = calcIncomeTax(gross, scotland);
+  return gross - tax;
+}
+
+// ─── Present Value of annuity ──────────────────────────────────────────────────
+function pvAnnuity(pmt, r, n) {
+  if (Math.abs(r) < 0.0001) return pmt * n;
+  return pmt * (1 - Math.pow(1 + r, -n)) / r;
+}
+
+// ─── Effective fee rate (with cap) ────────────────────────────────────────────
+function effectiveFeeRate(pot, feesPct, feesCap) {
+  const rawFee = pot * (feesPct / 100);
+  const cappedFee = Math.min(rawFee, feesCap);
+  return pot > 0 ? cappedFee / pot : feesPct / 100;
+}
+
+// ─── Components ───────────────────────────────────────────────────────────────
+function Toggle({ checked, onChange }) {
+  return (
+    <label className="toggle">
+      <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} />
+      <span className="toggle-slider" />
+    </label>
+  );
+}
+
+function NumInput({ value, onChange, min = 0, max, step = 1, prefix = '£', suffix = '' }) {
+  const [raw, setRaw] = useState('');
+  const [focused, setFocused] = useState(false);
+
+  const display = focused ? raw : (prefix === '£' ? value.toLocaleString('en-GB') : String(value));
+
+  return (
+    <div style={{ position: 'relative' }}>
+      {prefix && <span className="input-prefix">{prefix}</span>}
+      <input
+        className="input-field"
+        style={{ paddingLeft: prefix ? '1.8rem' : '0.9rem', paddingRight: suffix ? '2.2rem' : '0.9rem' }}
+        value={display}
+        onFocus={() => { setFocused(true); setRaw(String(value)); }}
+        onBlur={() => {
+          setFocused(false);
+          const v = parseFloat(raw.replace(/,/g, ''));
+          if (!isNaN(v)) {
+            const clamped = max !== undefined ? Math.min(max, Math.max(min, v)) : Math.max(min, v);
+            onChange(clamped);
+          }
+          setRaw('');
+        }}
+        onChange={e => setRaw(e.target.value)}
+      />
+      {suffix && <span className="input-suffix">{suffix}</span>}
+    </div>
+  );
+}
+
+function InfoIcon({ tip }) {
+  return (
+    <span className="tooltip-wrap" style={{ marginLeft: 4 }}>
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ cursor: 'help', flexShrink: 0 }}>
+        <circle cx="7" cy="7" r="6" stroke="#94a3b8" strokeWidth="1.3" />
+        <text x="7" y="11" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="Sora,sans-serif" fontWeight="700">i</text>
+      </svg>
+      <span className="tt">{tip}</span>
+    </span>
+  );
+}
+
+function SectionTitle({ children }) {
+  return <div className="section-title">{children}</div>;
+}
+
+// ─── Main App ─────────────────────────────────────────────────────────────────
+function App() {
+  const [mode, setMode] = useState('swr'); // 'swr' | 'deplete'
+  const [retirementAge, setRetirementAge] = useState(65);
+  const [desiredIncome, setDesiredIncome] = useState(28000);
+  const [growthRate, setGrowthRate] = useState(5);
+  const [feesPct, setFeesPct] = useState(0.35);
+  const [feesCap, setFeesCap] = useState(875);
+  const [swr, setSwr] = useState(4);
+  const [depleteAge, setDepleteAge] = useState(90);
+  const [scotland, setScotland] = useState(false);
+  const [includeStatePension, setIncludeStatePension] = useState(true);
+  const [navOpen, setNavOpen] = useState(false);
+
+  const STATE_PENSION = 11502;
+  const STATE_PENSION_AGE = 68;
+
+  const results = useMemo(() => {
+    const netReal = (growthRate - feesPct) / 100;
+
+    // After-tax income
+    const taxPaid = calcIncomeTax(desiredIncome, scotland);
+    const afterTaxIncome = desiredIncome - taxPaid;
+
+    // Effective withdrawal (after state pension offset)
+    const spFromRetirement = (includeStatePension && retirementAge >= STATE_PENSION_AGE) ? STATE_PENSION : 0;
+    const spDelayed = (includeStatePension && retirementAge < STATE_PENSION_AGE) ? STATE_PENSION : 0;
+
+    // Required pot calculations
+    let reqPotWithSP, reqPotNoSP;
+
+    if (mode === 'swr') {
+      // Without state pension
+      reqPotNoSP = desiredIncome / (swr / 100);
+      // With state pension: net withdrawal needed from pot (SP reduces it from age 68 or retirement)
+      if (includeStatePension) {
+        const netWithdrawal = Math.max(0, desiredIncome - spFromRetirement);
+        if (retirementAge < STATE_PENSION_AGE) {
+          // Need pot that covers full income until SP kicks in, then reduced
+          // Approximate: use weighted approach
+          // Pot needed if SP starts immediately would be:
+          const potIfSpNow = Math.max(0, desiredIncome - STATE_PENSION) / (swr / 100);
+          // But we need to cover the gap years too
+          // Simple approach: use average
+          const spGapYears = STATE_PENSION_AGE - retirementAge;
+          // PV of the extra we need for the gap years
+          const extraNeeded = STATE_PENSION * spGapYears; // rough
+          reqPotWithSP = Math.max(0, potIfSpNow + extraNeeded * 0.7);
+        } else {
+          reqPotWithSP = Math.max(0, desiredIncome - STATE_PENSION) / (swr / 100);
+        }
+      } else {
+        reqPotWithSP = reqPotNoSP;
+      }
+    } else {
+      // Deplete mode
+      const n = depleteAge - retirementAge;
+      reqPotNoSP = pvAnnuity(desiredIncome, netReal, n);
+      if (includeStatePension) {
+        if (retirementAge >= STATE_PENSION_AGE) {
+          const netPmt = Math.max(0, desiredIncome - STATE_PENSION);
+          reqPotWithSP = pvAnnuity(netPmt, netReal, n);
+        } else {
+          const yearsToSP = STATE_PENSION_AGE - retirementAge;
+          const yearsAfterSP = depleteAge - STATE_PENSION_AGE;
+          const potForGapPhase = pvAnnuity(desiredIncome, netReal, yearsToSP);
+          const potForSPPhase = pvAnnuity(Math.max(0, desiredIncome - STATE_PENSION), netReal, yearsAfterSP);
+          // Discount SP phase pot back to retirement
+          const pvSPPhase = potForSPPhase / Math.pow(1 + netReal, yearsToSP);
+          reqPotWithSP = potForGapPhase + pvSPPhase;
+        }
+      } else {
+        reqPotWithSP = reqPotNoSP;
+      }
+    }
+
+    const requiredPot = includeStatePension ? reqPotWithSP : reqPotNoSP;
+    const statePensionPotSaving = reqPotNoSP - reqPotWithSP;
+
+    // Year-by-year simulation from retirement to 100
+    const simYears = [];
+    let pot = requiredPot;
+
+    for (let age = retirementAge; age <= 100; age++) {
+      const sp = (includeStatePension && age >= STATE_PENSION_AGE) ? STATE_PENSION : 0;
+      const withdrawal = Math.max(0, desiredIncome - sp);
+
+      // Apply growth then withdraw
+      const growthAmt = pot * (growthRate / 100);
+      const effectiveFee = Math.min(pot * (feesPct / 100), feesCap);
+      const netGrowth = growthAmt - effectiveFee;
+
+      if (age > retirementAge) {
+        pot = Math.max(0, pot + netGrowth - withdrawal);
+      }
+
+      simYears.push({
+        age,
+        pot: Math.round(Math.max(0, pot)),
+        withdrawal,
+        sp,
+      });
+
+      if (pot <= 0 && age > retirementAge) {
+        // Fill remaining years with 0
+        for (let a = age + 1; a <= 100; a++) {
+          simYears.push({ age: a, pot: 0, withdrawal: 0, sp: 0 });
+        }
+        break;
+      }
+    }
+
+    // Status for SWR mode
+    let potStatus = 'stable';
+    if (mode === 'swr') {
+      const effectiveSWR = desiredIncome / requiredPot;
+      if (netReal > effectiveSWR) potStatus = 'growing';
+      else if (simYears.some(y => y.pot === 0 && y.age < 90)) potStatus = 'depleting';
+      else potStatus = 'declining';
+    } else {
+      potStatus = 'deplete';
+    }
+
+    // Pot at key ages
+    const keyAges = [70, 75, 80, 85, 90];
+    const potAtAge = keyAges.map(a => {
+      const found = simYears.find(y => y.age === a);
+      return { age: a, pot: found ? found.pot : 0 };
+    });
+
+    // Sensitivity table rows
+    const sensIncomes = [15000, 20000, 25000, 28000, 30000, 35000, 40000, 50000];
+    const sensRows = sensIncomes.map(inc => {
+      const spAdj = includeStatePension ? Math.max(0, inc - STATE_PENSION) : inc;
+      let sensReqPot;
+      if (mode === 'swr') {
+        sensReqPot = spAdj / (swr / 100);
+        if (includeStatePension && retirementAge < STATE_PENSION_AGE) {
+          const gapExtra = STATE_PENSION * (STATE_PENSION_AGE - retirementAge) * 0.7;
+          const potIfSpNow = spAdj / (swr / 100);
+          sensReqPot = potIfSpNow + gapExtra;
+        }
+      } else {
+        if (includeStatePension && retirementAge < STATE_PENSION_AGE) {
+          const yearsToSP = STATE_PENSION_AGE - retirementAge;
+          const yearsAfterSP = depleteAge - STATE_PENSION_AGE;
+          const p1 = pvAnnuity(inc, netReal, yearsToSP);
+          const p2 = pvAnnuity(Math.max(0, inc - STATE_PENSION), netReal, yearsAfterSP);
+          sensReqPot = p1 + p2 / Math.pow(1 + netReal, yearsToSP);
+        } else {
+          sensReqPot = pvAnnuity(spAdj, netReal, depleteAge - retirementAge);
+        }
+      }
+      const sensNet = netIncome(inc, scotland);
+      return {
+        income: inc,
+        pot: Math.round(Math.max(0, sensReqPot)),
+        afterTax: sensNet,
+        monthly: Math.round(sensNet / 12),
+        isSelected: inc === desiredIncome,
+      };
+    });
+
+    // Where pot hits zero
+    const zeroPotAge = simYears.find(y => y.pot === 0)?.age || null;
+
+    return {
+      afterTaxIncome,
+      taxPaid,
+      requiredPot: Math.round(Math.max(0, requiredPot)),
+      reqPotNoSP: Math.round(Math.max(0, reqPotNoSP)),
+      reqPotWithSP: Math.round(Math.max(0, reqPotWithSP)),
+      statePensionPotSaving: Math.round(Math.max(0, statePensionPotSaving)),
+      simYears,
+      potStatus,
+      potAtAge,
+      sensRows,
+      zeroPotAge,
+    };
+  }, [mode, retirementAge, desiredIncome, growthRate, feesPct, feesCap, swr, depleteAge, scotland, includeStatePension]);
+
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (!active || !payload?.length) return null;
+    return (
+      <div style={{ background: '#111827', border: '1px solid #1e293b', borderRadius: 8, padding: '0.7rem 1rem', fontSize: '0.8rem' }}>
+        <div style={{ color: '#94a3b8', marginBottom: 4 }}>Age {label}</div>
+        {payload.map((p, i) => (
+          <div key={i} style={{ color: p.color || '#10b981', fontFamily: 'IBM Plex Mono, monospace', fontWeight: 600 }}>
+            {p.name}: {fmtK(p.value)}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const BarTooltip = ({ active, payload, label }) => {
+    if (!active || !payload?.length) return null;
+    return (
+      <div style={{ background: '#111827', border: '1px solid #1e293b', borderRadius: 8, padding: '0.7rem 1rem', fontSize: '0.8rem' }}>
+        <div style={{ color: '#94a3b8', marginBottom: 4 }}>Age {label}</div>
+        <div style={{ color: '#10b981', fontFamily: 'IBM Plex Mono, monospace', fontWeight: 600 }}>
+          Pot: {fmtK(payload[0].value)}
+        </div>
+      </div>
+    );
+  };
+
+  const statusConfig = {
+    growing:   { bg: 'rgba(16,185,129,0.1)',  border: 'rgba(16,185,129,0.3)', color: '#10b981', label: 'Pot Always Growing',    icon: '↑' },
+    declining: { bg: 'rgba(251,191,36,0.08)', border: 'rgba(251,191,36,0.3)', color: '#fbbf24', label: 'Pot Slowly Declining',  icon: '↘' },
+    depleting: { bg: 'rgba(244,63,94,0.08)',  border: 'rgba(244,63,94,0.3)', color: '#f43f5e', label: 'Pot Depleting',          icon: '↓' },
+    stable:    { bg: 'rgba(6,182,212,0.08)',  border: 'rgba(6,182,212,0.3)', color: '#06b6d4', label: 'Pot Stable',             icon: '→' },
+    deplete:   { bg: 'rgba(6,182,212,0.08)',  border: 'rgba(6,182,212,0.3)', color: '#06b6d4', label: `Guaranteed until age ${depleteAge}`, icon: '✓' },
+  };
+  const sc = statusConfig[results.potStatus] || statusConfig.stable;
+
+  // Filter sim data for chart (every 2 years)
+  const chartData = results.simYears.filter((_, i) => i % 2 === 0 || results.simYears[i].age === retirementAge || results.simYears[i].age === 100);
+
+  const growthOptions = [
+    { value: 1, label: '1% — Conservative' },
+    { value: 3, label: '3% — Cautious' },
+    { value: 5, label: '5% — Recommended' },
+    { value: 7, label: '7% — Growth' },
+    { value: 9, label: '9% — Aggressive' },
+  ];
+
+  return (
+    <div style={{ minHeight: '100vh', background: '#0a0f1e' }}>
+
+      {/* ── Navigation ── */}
+      <nav style={{ background: 'rgba(17,24,39,0.95)', borderBottom: '1px solid #1e293b', position: 'sticky', top: 0, zIndex: 50, backdropFilter: 'blur(12px)' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 60 }}>
+          <a href="index.html" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', textDecoration: 'none' }}>
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <path d="M11 2L3 7v8l8 5 8-5V7L11 2z" stroke="#10b981" strokeWidth="1.8" fill="none"/>
+              <path d="M11 6v10M7 8.5l4 2.5 4-2.5" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+            <span style={{ fontFamily: 'Sora, sans-serif', fontWeight: 700, fontSize: '1.1rem', color: '#f1f5f9' }}>
+              Saving<span style={{ color: '#10b981' }}>Tool</span>
+            </span>
+          </a>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.75rem' }}>
+            <a href="index.html" className="nav-link">Home</a>
+            <div style={{ position: 'relative' }} onMouseEnter={() => setNavOpen(true)} onMouseLeave={() => setNavOpen(false)}>
+              <span className="nav-link" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                Calculators
+                <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 3l3 4 3-4" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round"/></svg>
+              </span>
+              {navOpen && (
+                <div className="dropdown-menu">
+                  {[
+                    { label: 'Salary & Tax', href: 'index.html' },
+                    { label: 'How Much to Retire?', href: 'how-much-do-i-need-calculator.html' },
+                    { label: 'ISA Bridging', href: 'isa-bridging-calculator.html' },
+                    { label: 'Mortgage Calculator', href: 'mortgage-calculator.html' },
+                    { label: 'Umbrella vs PAYE', href: 'umbrella-calculator.html' },
+                    { label: 'IR35 Calculator', href: 'ir35-calculator.html' },
+                  ].map(item => (
+                    <a key={item.label} href={item.href} className="dropdown-item">{item.label}</a>
+                  ))}
+                </div>
+              )}
+            </div>
+            <a href="#" className="nav-link">Blog</a>
+            <span style={{ background: 'rgba(16,185,129,0.15)', color: '#10b981', border: '1px solid rgba(16,185,129,0.3)', borderRadius: 5, padding: '3px 10px', fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.08em', cursor: 'pointer' }}>
+              ADVANCED
+            </span>
+          </div>
+        </div>
+      </nav>
+
+      {/* ── Hero ── */}
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '2.5rem 1.5rem 0' }}>
+        <div style={{ marginBottom: '1rem' }}>
+          <a href="index.html" style={{ color: '#94a3b8', fontSize: '0.8rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.3rem', transition: 'color 0.2s' }}
+            onMouseEnter={e => e.target.style.color = '#f1f5f9'}
+            onMouseLeave={e => e.target.style.color = '#94a3b8'}>
+            ← All Calculators
+          </a>
+        </div>
+        <h1 style={{ fontFamily: 'Sora, sans-serif', fontSize: 'clamp(1.5rem, 3vw, 2.2rem)', fontWeight: 800, color: '#f1f5f9', lineHeight: 1.2 }}>
+          How Much Do I Need to{' '}
+          <span style={{ color: '#10b981' }}>Retire?</span>
+        </h1>
+        <p style={{ color: '#94a3b8', marginTop: '0.5rem', fontSize: '0.9rem' }}>
+          Calculate the pension pot you need to sustain your desired income throughout retirement — using UK tax rates 2025/26
+        </p>
+      </div>
+
+      {/* ── Mode Toggle ── */}
+      <div style={{ maxWidth: 1280, margin: '1.25rem auto 0', padding: '0 1.5rem' }}>
+        <div style={{ display: 'flex', gap: '0.75rem', maxWidth: 520 }}>
+          <button className={`mode-btn${mode === 'swr' ? ' active' : ''}`} onClick={() => setMode('swr')}>
+            Use a Withdrawal Rate
+          </button>
+          <button className={`mode-btn${mode === 'deplete' ? ' active' : ''}`} onClick={() => setMode('deplete')}>
+            Allow Pot to Deplete
+          </button>
+        </div>
+        <p style={{ color: '#94a3b8', fontSize: '0.78rem', marginTop: '0.5rem' }}>
+          {mode === 'swr'
+            ? 'Size your pot so annual withdrawals are a percentage of its value — pot may grow over time.'
+            : 'Size your pot to pay out exactly until a target age, then fully consumed.'}
+        </p>
+      </div>
+
+      {/* ── Main two-column layout ── */}
+      <div className="two-col" style={{ maxWidth: 1280, margin: '1.25rem auto 0', padding: '0 1.5rem 4rem', display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
+
+        {/* ════ LEFT COLUMN — Inputs ════ */}
+        <div style={{ flex: '0 0 380px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+
+          {/* Retirement Details */}
+          <div className="card fade-in">
+            <SectionTitle>Retirement Details</SectionTitle>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.4rem' }}>Retirement Age (min 55)</label>
+                <NumInput value={retirementAge} onChange={v => setRetirementAge(Math.max(55, Math.min(80, v)))} min={55} max={80} step={1} prefix="" />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.4rem' }}>Desired Annual Income (£, pre-tax)</label>
+                <NumInput value={desiredIncome} onChange={setDesiredIncome} min={1000} step={500} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.4rem' }}>Growth Rate % per year</label>
+                <select
+                  className="select-field"
+                  value={growthRate}
+                  onChange={e => setGrowthRate(parseFloat(e.target.value))}
+                >
+                  {growthOptions.map(o => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', color: '#94a3b8', marginBottom: '0.4rem' }}>Fund Fees % / yr</label>
+                  <NumInput value={feesPct} onChange={v => setFeesPct(Math.max(0, Math.min(3, v)))} min={0} max={3} step={0.05} prefix="" suffix="%" />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', color: '#94a3b8', marginBottom: '0.4rem' }}>Fee Cap £/yr</label>
+                  <NumInput value={feesCap} onChange={v => setFeesCap(Math.max(0, v))} min={0} step={25} />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Mode-Specific Inputs */}
+          <div className="card fade-in">
+            <SectionTitle>{mode === 'swr' ? 'Withdrawal Strategy' : 'Depletion Target'}</SectionTitle>
+            {mode === 'swr' ? (
+              <div>
+                <label style={{ display: 'flex', alignItems: 'center', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.4rem' }}>
+                  Safe Withdrawal Rate (SWR) %
+                  <InfoIcon tip="The 4% rule: historically, withdrawing 4% of your pot in year one and adjusting for inflation has a high chance of lasting 30+ years. Lower rates are safer; higher rates risk depletion." />
+                </label>
+                <NumInput value={swr} onChange={v => setSwr(Math.max(1, Math.min(10, v)))} min={1} max={10} step={0.1} prefix="" suffix="%" />
+                <div style={{ marginTop: '0.75rem', background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.15)', borderRadius: 8, padding: '0.75rem' }}>
+                  <div style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.6 }}>
+                    <span style={{ color: '#10b981', fontWeight: 600 }}>The 4% Rule:</span> Based on US Trinity Study data, withdrawing 4% of your initial pot annually (inflation-adjusted) historically survived all 30-year periods. Many UK planners use 3–3.5% for extra safety.
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.4rem' }}>Guarantee Income Until Age (min 75)</label>
+                <NumInput value={depleteAge} onChange={v => setDepleteAge(Math.max(75, Math.min(105, v)))} min={75} max={105} step={1} prefix="" />
+                <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.5rem' }}>
+                  The pot is sized to pay exactly {fmt(desiredIncome)}/yr until age {depleteAge}, then fully consumed. Growth at {growthRate - feesPct}% net.
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* State Pension & Tax */}
+          <div className="card fade-in">
+            <SectionTitle>State Pension & Tax</SectionTitle>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <span style={{ fontSize: '0.85rem', color: '#f1f5f9', fontWeight: 600 }}>Include State Pension?</span>
+                  <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: 2 }}>Reduces required pot from age {STATE_PENSION_AGE}</p>
+                </div>
+                <Toggle checked={includeStatePension} onChange={setIncludeStatePension} />
+              </div>
+              {includeStatePension && (
+                <div style={{ background: 'rgba(6,182,212,0.05)', border: '1px solid rgba(6,182,212,0.15)', borderRadius: 8, padding: '0.75rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: 4 }}>
+                    <span style={{ color: '#94a3b8' }}>State Pension Age:</span>
+                    <span className="mono" style={{ color: '#06b6d4' }}>68</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
+                    <span style={{ color: '#94a3b8' }}>Full New State Pension:</span>
+                    <span className="mono" style={{ color: '#06b6d4' }}>{fmt(STATE_PENSION)}/yr</span>
+                  </div>
+                </div>
+              )}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <span style={{ fontSize: '0.85rem', color: '#f1f5f9', fontWeight: 600 }}>Resident of Scotland?</span>
+                  <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: 2 }}>Uses Scottish income tax bands</p>
+                </div>
+                <Toggle checked={scotland} onChange={setScotland} />
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        {/* ════ RIGHT COLUMN — Results ════ */}
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+
+          {/* Big Answer Callout */}
+          <div className="card fade-in" style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(6,182,212,0.06) 100%)', border: '1px solid rgba(16,185,129,0.25)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
+              <div>
+                <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.4rem', fontWeight: 500 }}>Desired Income</div>
+                <div className="mono" style={{ fontSize: 'clamp(1.1rem, 2vw, 1.5rem)', fontWeight: 700, color: '#f1f5f9' }}>{fmt(desiredIncome)}</div>
+                <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>per year (gross)</div>
+              </div>
+              <div>
+                <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.4rem', fontWeight: 500 }}>Required Pot</div>
+                <div className="mono" style={{ fontSize: 'clamp(1.1rem, 2vw, 1.5rem)', fontWeight: 700, color: '#10b981' }}>{fmtK(results.requiredPot)}</div>
+                <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>at retirement</div>
+              </div>
+              <div>
+                <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.4rem', fontWeight: 500 }}>After-Tax Income</div>
+                <div className="mono" style={{ fontSize: 'clamp(1.1rem, 2vw, 1.5rem)', fontWeight: 700, color: '#06b6d4' }}>{fmt(results.afterTaxIncome)}</div>
+                <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>{fmt(Math.round(results.afterTaxIncome / 12))}/mo take-home</div>
+              </div>
+            </div>
+
+            {/* Status Banner */}
+            <div style={{ marginTop: '1.25rem', background: sc.bg, border: `1px solid ${sc.border}`, borderRadius: 8, padding: '0.65rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ color: sc.color, fontWeight: 700, fontSize: '1rem' }}>{sc.icon}</span>
+              <span style={{ color: sc.color, fontWeight: 600, fontSize: '0.88rem' }}>{sc.label}</span>
+              {mode === 'swr' && results.zeroPotAge && results.zeroPotAge <= 95 && (
+                <span style={{ color: '#94a3b8', fontSize: '0.78rem', marginLeft: 'auto' }}>
+                  Pot reaches zero at age {results.zeroPotAge}
+                </span>
+              )}
+              {mode === 'swr' && (!results.zeroPotAge || results.zeroPotAge > 95) && results.potStatus !== 'depleting' && (
+                <span style={{ color: '#94a3b8', fontSize: '0.78rem', marginLeft: 'auto' }}>
+                  Pot survives to age 100+
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Retirement Pot Forecast Chart */}
+          <div className="card fade-in">
+            <SectionTitle>Retirement Pot Forecast</SectionTitle>
+            <p style={{ fontSize: '0.78rem', color: '#94a3b8', marginBottom: '1rem', marginTop: '-0.5rem' }}>
+              Pot value from retirement age to 100, assuming {fmt(desiredIncome)}/yr withdrawals at {growthRate}% growth and {feesPct}% fees
+            </p>
+            <div style={{ height: 280 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="potGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0.02} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                  <XAxis
+                    dataKey="age"
+                    tick={{ fill: '#94a3b8', fontSize: 11, fontFamily: 'IBM Plex Mono' }}
+                    tickLine={false}
+                    axisLine={{ stroke: '#1e293b' }}
+                    label={{ value: 'Age', position: 'insideBottom', offset: -2, fill: '#94a3b8', fontSize: 11 }}
+                  />
+                  <YAxis
+                    tick={{ fill: '#94a3b8', fontSize: 10, fontFamily: 'IBM Plex Mono' }}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={v => fmtK(v)}
+                    width={60}
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  {includeStatePension && STATE_PENSION_AGE >= retirementAge && STATE_PENSION_AGE <= 100 && (
+                    <ReferenceLine
+                      x={STATE_PENSION_AGE}
+                      stroke="#06b6d4"
+                      strokeDasharray="4 3"
+                      label={{ value: 'State Pension starts', position: 'top', fill: '#06b6d4', fontSize: 10, fontFamily: 'Sora' }}
+                    />
+                  )}
+                  <Area
+                    type="monotone"
+                    dataKey="pot"
+                    name="Pot Value"
+                    stroke="#10b981"
+                    strokeWidth={2.5}
+                    fill="url(#potGrad)"
+                    dot={false}
+                    activeDot={{ r: 4, fill: '#10b981' }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+            <div style={{ display: 'flex', gap: '1.5rem', marginTop: '0.75rem', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem', color: '#94a3b8' }}>
+                <div style={{ width: 12, height: 3, background: '#10b981', borderRadius: 2 }} />
+                Pot Value
+              </div>
+              {includeStatePension && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem', color: '#94a3b8' }}>
+                  <div style={{ width: 12, height: 2, background: '#06b6d4', borderRadius: 1, borderTop: '2px dashed #06b6d4' }} />
+                  State Pension starts (age {STATE_PENSION_AGE})
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* State Pension Impact */}
+          {includeStatePension && (
+            <div className="card fade-in">
+              <SectionTitle>State Pension Impact</SectionTitle>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
+                <div className="stat-box">
+                  <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginBottom: '0.3rem' }}>Without State Pension</div>
+                  <div className="mono" style={{ fontSize: '1.1rem', fontWeight: 700, color: '#f43f5e' }}>{fmtK(results.reqPotNoSP)}</div>
+                  <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: 2 }}>required pot</div>
+                </div>
+                <div className="stat-box" style={{ borderColor: 'rgba(16,185,129,0.3)', background: 'rgba(16,185,129,0.05)' }}>
+                  <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginBottom: '0.3rem' }}>With State Pension</div>
+                  <div className="mono" style={{ fontSize: '1.1rem', fontWeight: 700, color: '#10b981' }}>{fmtK(results.reqPotWithSP)}</div>
+                  <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: 2 }}>required pot</div>
+                </div>
+                <div className="stat-box">
+                  <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginBottom: '0.3rem' }}>State Pension Saves You</div>
+                  <div className="mono" style={{ fontSize: '1.1rem', fontWeight: 700, color: '#06b6d4' }}>{fmtK(results.statePensionPotSaving)}</div>
+                  <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: 2 }}>in pot size</div>
+                </div>
+              </div>
+              <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.75rem', lineHeight: 1.6 }}>
+                The full New State Pension ({fmt(STATE_PENSION)}/yr from age {STATE_PENSION_AGE}) reduces the private pot you need to build. The saving shown is the reduction in required pot due to state pension.
+              </p>
+            </div>
+          )}
+
+          {/* Pot at Key Ages Bar Chart */}
+          <div className="card fade-in">
+            <SectionTitle>Pot Adequacy at Key Ages</SectionTitle>
+            <div style={{ height: 220 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={results.potAtAge} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+                  <XAxis
+                    dataKey="age"
+                    tick={{ fill: '#94a3b8', fontSize: 11, fontFamily: 'IBM Plex Mono' }}
+                    tickLine={false}
+                    axisLine={{ stroke: '#1e293b' }}
+                    tickFormatter={v => `Age ${v}`}
+                  />
+                  <YAxis
+                    tick={{ fill: '#94a3b8', fontSize: 10, fontFamily: 'IBM Plex Mono' }}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={v => fmtK(v)}
+                    width={60}
+                  />
+                  <Tooltip content={<BarTooltip />} />
+                  <Bar dataKey="pot" name="Pot Value" radius={[4, 4, 0, 0]}>
+                    {results.potAtAge.map((entry, index) => (
+                      <Recharts.Cell
+                        key={`cell-${index}`}
+                        fill={entry.pot === 0 ? '#f43f5e' : entry.pot < results.requiredPot * 0.3 ? '#fbbf24' : '#10b981'}
+                        fillOpacity={0.85}
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <p style={{ fontSize: '0.73rem', color: '#94a3b8', marginTop: '0.5rem' }}>
+              Green = healthy balance, Amber = below 30% of initial pot, Red = depleted
+            </p>
+          </div>
+
+          {/* Sensitivity Table */}
+          <div className="card fade-in">
+            <SectionTitle>Sensitivity — Different Income Levels</SectionTitle>
+
+            {/* Header */}
+            <div className="sens-row" style={{ marginBottom: '0.25rem' }}>
+              <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 600 }}>Desired Income</span>
+              <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 600, textAlign: 'right' }}>Required Pot ({mode === 'swr' ? `${swr}% SWR` : `to ${depleteAge}`})</span>
+              <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 600, textAlign: 'right' }}>After-Tax Income</span>
+              <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 600, textAlign: 'right' }}>Monthly</span>
+            </div>
+            <div style={{ borderTop: '1px solid #1e293b', paddingTop: '0.25rem' }}>
+              {results.sensRows.map((row) => (
+                <div key={row.income} className={`sens-row${row.isSelected ? ' highlight' : ''}`}>
+                  <span className="mono" style={{ fontSize: '0.82rem', color: row.isSelected ? '#10b981' : '#f1f5f9', fontWeight: row.isSelected ? 600 : 400 }}>
+                    {fmt(row.income)}
+                    {row.isSelected && <span style={{ marginLeft: 4, fontSize: '0.65rem', color: '#10b981', background: 'rgba(16,185,129,0.15)', borderRadius: 3, padding: '1px 4px' }}>you</span>}
+                  </span>
+                  <span className="mono" style={{ fontSize: '0.82rem', color: row.isSelected ? '#10b981' : '#94a3b8', textAlign: 'right', fontWeight: row.isSelected ? 700 : 400 }}>
+                    {fmtK(row.pot)}
+                  </span>
+                  <span className="mono" style={{ fontSize: '0.82rem', color: '#94a3b8', textAlign: 'right' }}>
+                    {fmt(row.afterTax)}
+                  </span>
+                  <span className="mono" style={{ fontSize: '0.82rem', color: '#94a3b8', textAlign: 'right' }}>
+                    {fmt(row.monthly)}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <p style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '0.75rem' }}>
+              After-tax income uses 2025/26 UK income tax bands ({scotland ? 'Scotland' : 'England/Wales/NI'}).
+              Required pot {includeStatePension ? 'includes state pension offset.' : 'excludes state pension.'}
+            </p>
+          </div>
+
+          {/* Additional context */}
+          <div className="card fade-in" style={{ background: 'rgba(16,185,129,0.03)', border: '1px solid rgba(16,185,129,0.12)' }}>
+            <SectionTitle>Key Assumptions</SectionTitle>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem' }}>
+              {[
+                { label: 'Nominal growth rate', value: `${growthRate}%/yr` },
+                { label: 'Fund fees', value: `${feesPct}% (capped £${feesCap.toLocaleString()})` },
+                { label: 'Net real return', value: `${(growthRate - feesPct).toFixed(2)}%/yr` },
+                { label: 'Retirement age', value: String(retirementAge) },
+                { label: 'Strategy', value: mode === 'swr' ? `${swr}% SWR` : `Deplete by ${depleteAge}` },
+                { label: 'State Pension', value: includeStatePension ? `${fmt(STATE_PENSION)}/yr from ${STATE_PENSION_AGE}` : 'Not included' },
+                { label: 'Tax region', value: scotland ? 'Scotland' : 'England/Wales/NI' },
+                { label: 'Tax year', value: '2025/26' },
+              ].map(item => (
+                <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{item.label}</span>
+                  <span className="mono" style={{ fontSize: '0.75rem', color: '#f1f5f9' }}>{item.value}</span>
+                </div>
+              ))}
+            </div>
+            <p style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '0.9rem', lineHeight: 1.7, borderTop: '1px solid #1e293b', paddingTop: '0.75rem' }}>
+              <strong style={{ color: '#f1f5f9' }}>Disclaimer:</strong> This calculator is for illustrative and educational purposes only. It does not constitute financial advice. Investment returns are not guaranteed and past performance is not indicative of future results. Tax calculations are based on 2025/26 rates and your personal circumstances may differ. Always consult a qualified financial adviser before making retirement planning decisions.
+            </p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+</body>
+</html>

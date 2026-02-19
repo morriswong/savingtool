@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SavingTool – UK Salary & Tax Calculator 2025/26</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/recharts@2.12.7/umd/Recharts.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sora: ['Sora', 'sans-serif'],
+            mono: ['IBM Plex Mono', 'monospace'],
+          },
+          colors: {
+            navy: '#0a0f1e',
+            surface: '#111827',
+            border: '#1e293b',
+            emerald: { DEFAULT: '#10b981', 500: '#10b981' },
+            cyan: { DEFAULT: '#06b6d4', 500: '#06b6d4' },
+            slate: {
+              100: '#f1f5f9',
+              400: '#94a3b8',
+              700: '#334155',
+              800: '#1e293b',
+              900: '#0f172a',
+            },
+            rose: { DEFAULT: '#f43f5e', 500: '#f43f5e' },
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Sora', sans-serif;
+      background: #0a0f1e;
+      color: #f1f5f9;
+      min-height: 100vh;
+    }
+    .mono { font-family: 'IBM Plex Mono', monospace; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0a0f1e; }
+    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
+    input[type=range] { accent-color: #10b981; }
+    .card {
+      background: #111827;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+    .input-field {
+      background: #0a0f1e;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      color: #f1f5f9;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.95rem;
+      padding: 0.6rem 0.9rem;
+      width: 100%;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .input-field:focus { border-color: #10b981; }
+    .input-field::placeholder { color: #334155; }
+    .input-prefix {
+      position: absolute;
+      left: 0.9rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #94a3b8;
+      font-family: 'IBM Plex Mono', monospace;
+      pointer-events: none;
+    }
+    .input-suffix {
+      position: absolute;
+      right: 0.9rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #94a3b8;
+      font-family: 'IBM Plex Mono', monospace;
+      pointer-events: none;
+    }
+    .select-field {
+      background: #0a0f1e;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      color: #f1f5f9;
+      font-family: 'Sora', sans-serif;
+      font-size: 0.85rem;
+      padding: 0.6rem 0.9rem;
+      width: 100%;
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.9rem center;
+      padding-right: 2.2rem;
+    }
+    .select-field:focus { border-color: #10b981; }
+    .toggle {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background: #1e293b;
+      border-radius: 24px;
+      transition: 0.3s;
+    }
+    .toggle-slider:before {
+      content: '';
+      position: absolute;
+      width: 18px; height: 18px;
+      left: 3px; top: 3px;
+      background: #94a3b8;
+      border-radius: 50%;
+      transition: 0.3s;
+    }
+    .toggle input:checked + .toggle-slider { background: #10b981; }
+    .toggle input:checked + .toggle-slider:before {
+      transform: translateX(20px);
+      background: white;
+    }
+    .breakdown-row {
+      display: grid;
+      grid-template-columns: 1fr repeat(3, minmax(90px, 1fr));
+      gap: 0.5rem;
+      align-items: center;
+      padding: 0.55rem 0.5rem;
+      border-radius: 6px;
+      transition: background 0.15s;
+    }
+    .breakdown-row:hover { background: rgba(255,255,255,0.02); }
+    .breakdown-row.highlight {
+      background: rgba(16,185,129,0.08);
+      border: 1px solid rgba(16,185,129,0.2);
+    }
+    .breakdown-row.subdue { opacity: 0.65; }
+    .val-cell {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.85rem;
+      text-align: right;
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(16,185,129,0.15);
+      color: #10b981;
+      border: 1px solid rgba(16,185,129,0.3);
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-family: 'IBM Plex Mono', monospace;
+      padding: 1px 6px;
+      margin-left: 6px;
+      white-space: nowrap;
+    }
+    .nav-link {
+      color: #94a3b8;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .nav-link:hover { color: #f1f5f9; }
+    .section-title {
+      font-family: 'Sora', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #f1f5f9;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .section-title::before {
+      content: '';
+      display: block;
+      width: 3px;
+      height: 1.1em;
+      background: #10b981;
+      border-radius: 2px;
+    }
+    .fi-stat {
+      background: #0a0f1e;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 1rem;
+      text-align: center;
+    }
+    .salary-link {
+      background: #0a0f1e;
+      border: 1px solid #1e293b;
+      border-radius: 6px;
+      padding: 0.4rem 0.7rem;
+      font-size: 0.8rem;
+      font-family: 'IBM Plex Mono', monospace;
+      color: #94a3b8;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: center;
+    }
+    .salary-link:hover {
+      border-color: #10b981;
+      color: #10b981;
+      background: rgba(16,185,129,0.05);
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+    .fade-in { animation: fadeIn 0.3s ease; }
+    @media (max-width: 1024px) {
+      .two-col { flex-direction: column !important; }
+    }
+    .dropdown-menu {
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      margin-top: 8px;
+      background: #111827;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 0.5rem;
+      min-width: 200px;
+      z-index: 100;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+    .dropdown-item {
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      color: #94a3b8;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .dropdown-item:hover { background: rgba(255,255,255,0.05); color: #f1f5f9; }
+    .recharts-tooltip-wrapper .recharts-default-tooltip {
+      background: #111827 !important;
+      border: 1px solid #1e293b !important;
+      border-radius: 8px !important;
+    }
+    .plan-radio {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .plan-radio-btn {
+      padding: 0.35rem 0.8rem;
+      border-radius: 6px;
+      border: 1px solid #1e293b;
+      background: #0a0f1e;
+      color: #94a3b8;
+      font-size: 0.78rem;
+      font-family: 'Sora', sans-serif;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .plan-radio-btn.active {
+      border-color: #10b981;
+      color: #10b981;
+      background: rgba(16,185,129,0.08);
+    }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useMemo, useCallback, useRef, useEffect } = React;
+const {
+  LineChart, Line, AreaChart, Area,
+  PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+} = Recharts;
+
+// ─── Formatting helpers ───────────────────────────────────────────────────────
+const fmt = (n, decimals = 0) =>
+  '£' + Math.abs(n).toLocaleString('en-GB', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+const fmtRaw = (n) => n.toLocaleString('en-GB', { maximumFractionDigits: 0 });
+const pct = (n) => n.toFixed(1) + '%';
+
+// ─── UK Tax Calculations 2025/26 ──────────────────────────────────────────────
+function calcTax(gross, scotland) {
+  // Personal allowance taper
+  let pa = 12570;
+  if (gross > 100000) {
+    pa = Math.max(0, 12570 - Math.floor((gross - 100000) / 2));
+  }
+
+  const taxable = Math.max(0, gross - pa);
+
+  let tax = 0;
+  if (!scotland) {
+    // England / NI / Wales
+    const b1 = Math.max(0, Math.min(taxable, 50270 - pa));
+    const b2 = Math.max(0, Math.min(taxable - (50270 - pa), 125140 - 50270));
+    const b3 = Math.max(0, taxable - (125140 - pa));
+    tax = b1 * 0.20 + b2 * 0.40 + b3 * 0.45;
+  } else {
+    // Scotland — bands applied to (gross - PA)
+    // Starter 19% £12,571–£14,876 => width £2,305
+    // Basic   20% £14,877–£26,561 => width £11,685
+    // Inter   21% £26,562–£43,662 => width £17,101
+    // Higher  42% £43,663–£75,000 => width £31,338
+    // Advanced 45% £75,001–£125,140 => width £50,140
+    // Top     48% above £125,140
+    const bands = [
+      { limit: 2306,  rate: 0.19 },
+      { limit: 13685, rate: 0.20 },
+      { limit: 17101, rate: 0.21 },
+      { limit: 31338, rate: 0.42 },
+      { limit: 50140, rate: 0.45 },
+      { limit: Infinity, rate: 0.48 },
+    ];
+    let remaining = taxable;
+    for (const b of bands) {
+      if (remaining <= 0) break;
+      const chunk = Math.min(remaining, b.limit);
+      tax += chunk * b.rate;
+      remaining -= chunk;
+    }
+  }
+  return { tax: Math.max(0, tax), pa, taxable };
+}
+
+function calcNI(gross) {
+  // Employee NI
+  const lower = 12570;
+  const upper = 50270;
+  let ni = 0;
+  if (gross > lower) {
+    ni += Math.min(gross - lower, upper - lower) * 0.08;
+  }
+  if (gross > upper) {
+    ni += (gross - upper) * 0.02;
+  }
+  return Math.max(0, ni);
+}
+
+function calcEmployerNI(gross) {
+  const threshold = 5000;
+  return Math.max(0, (gross - threshold) * 0.15);
+}
+
+function calcStudentLoan(gross, plan) {
+  const thresholds = { '1': 24990, '2': 27295, '4': 31395, 'pg': 21000 };
+  const rates = { '1': 0.09, '2': 0.09, '4': 0.09, 'pg': 0.06 };
+  const t = thresholds[plan] || 27295;
+  const r = rates[plan] || 0.09;
+  return Math.max(0, (gross - t) * r);
+}
+
+// ─── Main App ─────────────────────────────────────────────────────────────────
+function App() {
+  // ── Inputs ──────────────────────────────────────────────────────────────────
+  const [salary, setSalary] = useState(37500);
+  const [otherIncome, setOtherIncome] = useState(0);
+  const [pensionEnabled, setPensionEnabled] = useState(true);
+  const [pensionEmployee, setPensionEmployee] = useState(5);
+  const [pensionEmployer, setPensionEmployer] = useState(3);
+  const [scotland, setScotland] = useState(false);
+  const [studentLoan, setStudentLoan] = useState(false);
+  const [loanPlan, setLoanPlan] = useState('2');
+  const [loanBalance, setLoanBalance] = useState(30000);
+
+  const [expenseMode, setExpenseMode] = useState('single');
+  const [totalExpense, setTotalExpense] = useState(1750);
+  const [housing, setHousing] = useState(800);
+  const [bills, setBills] = useState(300);
+  const [councilTax, setCouncilTax] = useState(200);
+  const [otherEssential, setOtherEssential] = useState(200);
+  const [food, setFood] = useState(250);
+  const [nonEssential, setNonEssential] = useState(500);
+
+  const [currentAge, setCurrentAge] = useState(35);
+  const [retirementAge, setRetirementAge] = useState(66);
+  const [existingPension, setExistingPension] = useState(0);
+  const [existingISA, setExistingISA] = useState(0);
+
+  const [swr, setSwr] = useState(4);
+  const [spendPct, setSpendPct] = useState(100);
+  const [surplusPct, setSurplusPct] = useState(100);
+
+  const [navOpen, setNavOpen] = useState(false);
+
+  // ── Core calculations ────────────────────────────────────────────────────────
+  const calc = useMemo(() => {
+    const gross = salary + otherIncome;
+    const employeePensionAmt = pensionEnabled ? gross * (pensionEmployee / 100) : 0;
+    const employerPensionAmt = pensionEnabled ? gross * (pensionEmployer / 100) : 0;
+    const taxableGross = Math.max(0, gross - employeePensionAmt); // salary sacrifice
+
+    const { tax, pa, taxable } = calcTax(taxableGross, scotland);
+    const ni = calcNI(taxableGross);
+    const employerNI = calcEmployerNI(gross);
+    const studentLoanAmt = studentLoan ? calcStudentLoan(taxableGross, loanPlan) : 0;
+
+    // Tax relief on pension (basic rate)
+    const taxRelief = employeePensionAmt * 0.20;
+
+    const takeHome = gross - employeePensionAmt - tax - ni - studentLoanAmt;
+    const totalPension = employeePensionAmt + employerPensionAmt;
+
+    const effectiveTaxRate = gross > 0 ? ((tax + ni) / gross) * 100 : 0;
+
+    return {
+      gross, employeePensionAmt, employerPensionAmt, taxableGross,
+      tax, pa, taxable, ni, employerNI, studentLoanAmt,
+      taxRelief, takeHome, totalPension, effectiveTaxRate,
+    };
+  }, [salary, otherIncome, pensionEnabled, pensionEmployee, pensionEmployer, scotland, studentLoan, loanPlan]);
+
+  // ── Monthly expenses ─────────────────────────────────────────────────────────
+  const expenses = useMemo(() => {
+    const essentialMonthly = expenseMode === 'single'
+      ? totalExpense
+      : housing + bills + councilTax + otherEssential + food;
+    const nonEssentialMonthly = nonEssential;
+    const totalMonthly = essentialMonthly + nonEssentialMonthly;
+    const takeHomeMonthly = calc.takeHome / 12;
+    const taxNIMonthly = (calc.tax + calc.ni) / 12;
+    const pensionMonthly = calc.employeePensionAmt / 12;
+    const surplus = takeHomeMonthly - totalMonthly;
+
+    return {
+      essentialMonthly, nonEssentialMonthly, totalMonthly,
+      takeHomeMonthly, taxNIMonthly, pensionMonthly, surplus,
+    };
+  }, [calc, expenseMode, totalExpense, housing, bills, councilTax, otherEssential, food, nonEssential]);
+
+  // ── Pension projection ───────────────────────────────────────────────────────
+  const pensionProjection = useMemo(() => {
+    const years = Math.max(1, retirementAge - currentAge);
+    const annualContrib = calc.totalPension;
+    const inflation = 0.025;
+    const fee = 0.0035;
+
+    const growthRates = { high: 0.09, normal: 0.05, low: 0.01 };
+    const result = [];
+
+    for (let y = 0; y <= years; y++) {
+      const age = currentAge + y;
+      const row = { age };
+      for (const [label, nominal] of Object.entries(growthRates)) {
+        const real = nominal - inflation - fee;
+        // FV of existing pot + annuity of contributions
+        let pot = existingPension * Math.pow(1 + real, y);
+        if (real !== 0) {
+          pot += annualContrib * ((Math.pow(1 + real, y) - 1) / real);
+        } else {
+          pot += annualContrib * y;
+        }
+        row[label] = Math.round(Math.max(0, pot));
+      }
+      result.push(row);
+    }
+    return result;
+  }, [currentAge, retirementAge, existingPension, calc.totalPension]);
+
+  // ── Wealth / FI projection ───────────────────────────────────────────────────
+  const wealthProjection = useMemo(() => {
+    const endAge = 85;
+    const statePensionAge = 68;
+    const statePensionAnnual = 11502;
+    const annualSurplus = Math.max(0, expenses.surplus) * 12 * (surplusPct / 100);
+    const annualContrib = calc.totalPension;
+    const isaAnnual = annualSurplus * 0.5; // simplified: half surplus to ISA
+    const real = 0.05 - 0.025 - 0.0035; // normal real return
+    const annualOutgoings = (expenses.essentialMonthly + expenses.nonEssentialMonthly) * 12 * (spendPct / 100);
+
+    const result = [];
+    let pensionPot = existingPension;
+    let isaPot = existingISA;
+
+    for (let age = currentAge; age <= endAge; age++) {
+      const y = age - currentAge;
+      // Accumulation phase
+      if (age < retirementAge) {
+        pensionPot = pensionPot * (1 + real) + annualContrib;
+        isaPot = isaPot * (1 + real) + isaAnnual;
+      } else {
+        // Decumulation
+        const sp = age >= statePensionAge ? statePensionAnnual : 0;
+        const draw = Math.max(0, annualOutgoings - sp);
+        pensionPot = Math.max(0, pensionPot * (1 + real) - draw * 0.6);
+        isaPot = Math.max(0, isaPot * (1 + real) - draw * 0.4);
+      }
+      result.push({
+        age,
+        pension: Math.round(Math.max(0, pensionPot)),
+        isa: Math.round(Math.max(0, isaPot)),
+        statePension: age >= statePensionAge ? Math.round(statePensionAnnual * ((endAge - statePensionAge) - Math.max(0, age - statePensionAge))) : 0,
+        outgoings: Math.round(annualOutgoings),
+      });
+    }
+    return result;
+  }, [currentAge, retirementAge, existingPension, existingISA, calc.totalPension, expenses, surplusPct, spendPct]);
+
+  // ── FI calculations ──────────────────────────────────────────────────────────
+  const fiCalc = useMemo(() => {
+    const annualOutgoings = (expenses.essentialMonthly + expenses.nonEssentialMonthly) * 12 * (spendPct / 100);
+    const fiTarget = annualOutgoings / (swr / 100);
+    const projAtRetirement = pensionProjection[pensionProjection.length - 1] || {};
+    const totalAtRetirement = (projAtRetirement.normal || 0) + existingISA;
+    const onTrack = totalAtRetirement >= fiTarget;
+    const annualRetirementIncome = totalAtRetirement * (swr / 100);
+    return { fiTarget, totalAtRetirement, onTrack, annualRetirementIncome, annualOutgoings };
+  }, [expenses, swr, spendPct, pensionProjection, existingISA]);
+
+  // ── Donut chart data ──────────────────────────────────────────────────────────
+  const donutData = useMemo(() => {
+    const taxNI = (calc.tax + calc.ni) / 12;
+    const pension = calc.employeePensionAmt / 12;
+    const essential = expenses.essentialMonthly;
+    const nonEss = expenses.nonEssentialMonthly;
+    const surplus = Math.max(0, expenses.surplus);
+    const total = taxNI + pension + essential + nonEss + surplus;
+    return [
+      { name: 'Tax & NICs', value: Math.round(taxNI), color: '#f43f5e' },
+      { name: 'Pension', value: Math.round(pension), color: '#10b981' },
+      { name: 'Essential', value: Math.round(essential), color: '#06b6d4' },
+      { name: 'Non-Essential', value: Math.round(nonEss), color: '#8b5cf6' },
+      { name: 'Surplus', value: Math.round(surplus), color: '#f59e0b' },
+    ].filter(d => d.value > 0);
+  }, [calc, expenses]);
+
+  // ── Helpers ──────────────────────────────────────────────────────────────────
+  const Row = ({ label, year, month, week, highlight, subdue, badge }) => (
+    <div className={`breakdown-row${highlight ? ' highlight' : ''}${subdue ? ' subdue' : ''}`}>
+      <div style={{ fontSize: '0.82rem', color: highlight ? '#f1f5f9' : '#94a3b8', fontWeight: highlight ? 700 : 400, display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
+        {label}
+        {badge && <span className="badge">{badge}</span>}
+      </div>
+      <div className="val-cell" style={{ color: highlight ? '#10b981' : '#f1f5f9', fontWeight: highlight ? 700 : 400 }}>{fmt(year)}</div>
+      <div className="val-cell" style={{ color: highlight ? '#10b981' : '#f1f5f9', fontWeight: highlight ? 400 : 400 }}>{fmt(month)}</div>
+      <div className="val-cell" style={{ color: highlight ? '#10b981' : '#f1f5f9', fontWeight: highlight ? 400 : 400 }}>{fmt(week)}</div>
+    </div>
+  );
+
+  const NumInput = ({ value, onChange, prefix = '£', suffix, min = 0, max, step = 1, style }) => {
+    const [local, setLocal] = useState(String(value));
+    useEffect(() => { setLocal(String(value)); }, [value]);
+    return (
+      <div style={{ position: 'relative', ...style }}>
+        {prefix && <span className="input-prefix">{prefix}</span>}
+        <input
+          type="number"
+          className="input-field"
+          style={{ paddingLeft: prefix ? '1.8rem' : '0.9rem', paddingRight: suffix ? '2rem' : '0.9rem' }}
+          value={local}
+          min={min} max={max} step={step}
+          onChange={e => {
+            setLocal(e.target.value);
+            const v = parseFloat(e.target.value);
+            if (!isNaN(v) && v >= (min || 0)) onChange(v);
+          }}
+          onBlur={() => setLocal(String(value))}
+        />
+        {suffix && <span className="input-suffix">{suffix}</span>}
+      </div>
+    );
+  };
+
+  const Toggle = ({ checked, onChange }) => (
+    <label className="toggle">
+      <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} />
+      <span className="toggle-slider" />
+    </label>
+  );
+
+  const customTooltip = ({ active, payload, label }) => {
+    if (!active || !payload?.length) return null;
+    return (
+      <div style={{ background: '#111827', border: '1px solid #1e293b', borderRadius: 8, padding: '0.75rem 1rem', fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.78rem' }}>
+        <div style={{ color: '#94a3b8', marginBottom: '0.4rem', fontFamily: 'Sora, sans-serif' }}>Age {label}</div>
+        {payload.map(p => (
+          <div key={p.dataKey} style={{ color: p.color, marginBottom: '0.2rem' }}>
+            {p.name}: {fmt(p.value)}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const donutTooltip = ({ active, payload }) => {
+    if (!active || !payload?.length) return null;
+    return (
+      <div style={{ background: '#111827', border: '1px solid #1e293b', borderRadius: 8, padding: '0.75rem 1rem', fontSize: '0.82rem' }}>
+        <div style={{ color: payload[0].payload.color, fontFamily: 'IBM Plex Mono, monospace', fontWeight: 600 }}>
+          {payload[0].name}: {fmt(payload[0].value)}/mo
+        </div>
+      </div>
+    );
+  };
+
+  const salaryLinks = [20000,25000,30000,35000,40000,45000,50000,55000,60000,65000,70000,75000,80000,90000,100000,110000,125000,150000,175000,200000];
+
+  return (
+    <div style={{ minHeight: '100vh', background: '#0a0f1e' }}>
+      {/* ── Navigation ── */}
+      <nav style={{ background: 'rgba(17,24,39,0.95)', borderBottom: '1px solid #1e293b', position: 'sticky', top: 0, zIndex: 50, backdropFilter: 'blur(12px)' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 60 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer' }}>
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <path d="M11 2L3 7v8l8 5 8-5V7L11 2z" stroke="#10b981" strokeWidth="1.8" fill="none"/>
+              <path d="M11 6v10M7 8.5l4 2.5 4-2.5" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+            <span style={{ fontFamily: 'Sora, sans-serif', fontWeight: 700, fontSize: '1.1rem', color: '#f1f5f9' }}>
+              Saving<span style={{ color: '#10b981' }}>Tool</span>
+            </span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.75rem' }}>
+            <span className="nav-link">Home</span>
+            <div style={{ position: 'relative' }} onMouseEnter={() => setNavOpen(true)} onMouseLeave={() => setNavOpen(false)}>
+              <span className="nav-link" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                Calculators
+                <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 3l3 4 3-4" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round"/></svg>
+              </span>
+              {navOpen && (
+                <div className="dropdown-menu">
+                  {[
+                    ['Salary & Tax Calculator', 'index.html'],
+                    ['Mortgage Calculator', 'mortgage-calculator.html'],
+                    ['ISA Bridging Calculator', 'isa-bridging-calculator.html'],
+                    ['IR35 Calculator', 'ir35-calculator.html'],
+                    ['Umbrella Calculator', 'umbrella-calculator.html'],
+                    ['How Much Do I Need?', 'how-much-do-i-need-calculator.html'],
+                  ].map(([label, href]) => (
+                    <a key={label} href={href} className="dropdown-item" style={{ display: 'block', textDecoration: 'none' }}>{label}</a>
+                  ))}
+                </div>
+              )}
+            </div>
+            <span className="nav-link">Blog</span>
+            <span style={{ background: 'rgba(16,185,129,0.15)', color: '#10b981', border: '1px solid rgba(16,185,129,0.3)', borderRadius: 5, padding: '3px 10px', fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.08em', cursor: 'pointer' }}>
+              ADVANCED
+            </span>
+          </div>
+        </div>
+      </nav>
+
+      {/* ── Hero ── */}
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '2.5rem 1.5rem 0' }}>
+        <h1 style={{ fontFamily: 'Sora, sans-serif', fontSize: 'clamp(1.5rem, 3vw, 2.2rem)', fontWeight: 800, color: '#f1f5f9', lineHeight: 1.2 }}>
+          UK Salary &amp; Tax Calculator{' '}
+          <span style={{ color: '#10b981' }}>2025/26</span>
+        </h1>
+        <p style={{ color: '#94a3b8', marginTop: '0.5rem', fontSize: '0.9rem' }}>
+          Real-time income tax, NI, pension &amp; take-home pay calculations — including Scotland rates
+        </p>
+      </div>
+
+      {/* ── Main two-column layout ── */}
+      <div className="two-col" style={{ maxWidth: 1280, margin: '1.5rem auto 0', padding: '0 1.5rem 4rem', display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
+
+        {/* ════ LEFT COLUMN ════ */}
+        <div style={{ flex: '0 0 400px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+
+          {/* Section 1: Income */}
+          <div className="card fade-in">
+            <div className="section-title">Your Income</div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.4rem' }}>Annual Salary (pre-tax)</label>
+                <NumInput value={salary} onChange={setSalary} min={0} step={500} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.4rem' }}>Other Income</label>
+                <NumInput value={otherIncome} onChange={setOtherIncome} min={0} step={100} />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <label style={{ fontSize: '0.85rem', color: '#f1f5f9', fontWeight: 600 }}>Workplace Pension</label>
+                <Toggle checked={pensionEnabled} onChange={setPensionEnabled} />
+              </div>
+
+              {pensionEnabled && (
+                <div style={{ background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.15)', borderRadius: 8, padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.78rem', color: '#94a3b8', marginBottom: '0.4rem' }}>Your Contributions</label>
+                      <NumInput prefix="" suffix="%" value={pensionEmployee} onChange={v => setPensionEmployee(Math.min(100, v))} min={0} max={100} step={0.5} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.78rem', color: '#94a3b8', marginBottom: '0.4rem' }}>Employer Contributions</label>
+                      <NumInput prefix="" suffix="%" value={pensionEmployer} onChange={v => setPensionEmployer(Math.min(100, v))} min={0} max={100} step={0.5} />
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem' }}>
+                    <span style={{ color: '#94a3b8' }}>Your annual contribution:</span>
+                    <span className="mono" style={{ color: '#10b981' }}>{fmt(calc.employeePensionAmt)}/yr</span>
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.4rem' }}>Tax Residency</label>
+                <select
+                  className="select-field"
+                  value={scotland ? 'scotland' : 'england'}
+                  onChange={e => setScotland(e.target.value === 'scotland')}
+                >
+                  <option value="england">England / Northern Ireland / Wales</option>
+                  <option value="scotland">Scotland</option>
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <label style={{ fontSize: '0.85rem', color: '#f1f5f9', fontWeight: 600 }}>Student Loan</label>
+                <Toggle checked={studentLoan} onChange={setStudentLoan} />
+              </div>
+
+              {studentLoan && (
+                <div style={{ background: 'rgba(6,182,212,0.05)', border: '1px solid rgba(6,182,212,0.15)', borderRadius: 8, padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', color: '#94a3b8', marginBottom: '0.5rem' }}>Repayment Plan</label>
+                    <div className="plan-radio">
+                      {[['1','Plan 1'],['2','Plan 2'],['4','Plan 4'],['pg','Postgrad']].map(([val, label]) => (
+                        <button key={val} className={`plan-radio-btn${loanPlan === val ? ' active' : ''}`} onClick={() => setLoanPlan(val)}>{label}</button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', color: '#94a3b8', marginBottom: '0.4rem' }}>Outstanding Balance</label>
+                    <NumInput value={loanBalance} onChange={setLoanBalance} min={0} step={1000} />
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem' }}>
+                    <span style={{ color: '#94a3b8' }}>Annual repayment:</span>
+                    <span className="mono" style={{ color: '#06b6d4' }}>{fmt(calc.studentLoanAmt)}/yr</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Section 3: Monthly Expenses */}
+          <div className="card fade-in">
+            <div className="section-title">Monthly Expenses</div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>Expense mode</span>
+              <div style={{ display: 'flex', background: '#0a0f1e', borderRadius: 8, border: '1px solid #1e293b', overflow: 'hidden' }}>
+                {[['single','Total'],['breakdown','Breakdown']].map(([val, label]) => (
+                  <button key={val} onClick={() => setExpenseMode(val)} style={{ padding: '0.35rem 0.8rem', fontSize: '0.78rem', background: expenseMode === val ? '#10b981' : 'transparent', color: expenseMode === val ? '#0a0f1e' : '#94a3b8', border: 'none', cursor: 'pointer', fontFamily: 'Sora, sans-serif', fontWeight: expenseMode === val ? 600 : 400, transition: 'all 0.15s' }}>{label}</button>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {expenseMode === 'single' ? (
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.4rem' }}>Essential Outgoings (monthly)</label>
+                  <NumInput value={totalExpense} onChange={setTotalExpense} min={0} step={50} />
+                </div>
+              ) : (
+                <>
+                  {[
+                    ['Housing (rent/mortgage)', housing, setHousing],
+                    ['Essential Bills', bills, setBills],
+                    ['Council Tax', councilTax, setCouncilTax],
+                    ['Other Essentials', otherEssential, setOtherEssential],
+                    ['Food & Groceries', food, setFood],
+                  ].map(([label, val, setter]) => (
+                    <div key={label}>
+                      <label style={{ display: 'block', fontSize: '0.78rem', color: '#94a3b8', marginBottom: '0.4rem' }}>{label}</label>
+                      <NumInput value={val} onChange={setter} min={0} step={25} />
+                    </div>
+                  ))}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #1e293b', paddingTop: '0.5rem', fontSize: '0.82rem' }}>
+                    <span style={{ color: '#94a3b8' }}>Essential total:</span>
+                    <span className="mono" style={{ color: '#06b6d4' }}>{fmt(expenses.essentialMonthly)}/mo</span>
+                  </div>
+                </>
+              )}
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.4rem' }}>Non-Essential Spending (monthly)</label>
+                <NumInput value={nonEssential} onChange={setNonEssential} min={0} step={50} />
+              </div>
+            </div>
+          </div>
+
+          {/* Section 4: Your Plan */}
+          <div className="card fade-in">
+            <div className="section-title">Your Retirement Plan</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', color: '#94a3b8', marginBottom: '0.4rem' }}>Current Age</label>
+                  <NumInput prefix="" value={currentAge} onChange={v => setCurrentAge(Math.min(v, retirementAge - 1))} min={16} max={80} step={1} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', color: '#94a3b8', marginBottom: '0.4rem' }}>Target Retirement Age</label>
+                  <NumInput prefix="" value={retirementAge} onChange={v => setRetirementAge(Math.max(v, currentAge + 1))} min={currentAge + 1} max={80} step={1} />
+                </div>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.4rem' }}>Existing Pension Pot</label>
+                <NumInput value={existingPension} onChange={setExistingPension} min={0} step={1000} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.4rem' }}>Existing ISA Savings</label>
+                <NumInput value={existingISA} onChange={setExistingISA} min={0} step={1000} />
+              </div>
+            </div>
+          </div>
+
+          {/* Section 5: FI Settings */}
+          <div className="card fade-in">
+            <div className="section-title">Financial Independence</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.4rem' }}>Safe Withdrawal Rate (%)</label>
+                <NumInput prefix="" suffix="%" value={swr} onChange={setSwr} min={1} max={10} step={0.1} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.4rem' }}>Spending in retirement (% of current)</label>
+                <NumInput prefix="" suffix="%" value={spendPct} onChange={setSpendPct} min={10} max={200} step={5} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.4rem' }}>Surplus to invest (%)</label>
+                <NumInput prefix="" suffix="%" value={surplusPct} onChange={setSurplusPct} min={0} max={100} step={5} />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ════ RIGHT COLUMN ════ */}
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+
+          {/* Section 2: Tax Breakdown */}
+          <div className="card fade-in">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+              <div className="section-title" style={{ marginBottom: 0 }}>Tax Breakdown</div>
+              <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>Effective rate</div>
+                  <div className="mono" style={{ color: '#f43f5e', fontWeight: 600, fontSize: '0.95rem' }}>{pct(calc.effectiveTaxRate)}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Header */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr repeat(3, minmax(90px, 1fr))', gap: '0.5rem', padding: '0.35rem 0.5rem', marginBottom: '0.25rem' }}>
+              <div style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Item</div>
+              {['Year','Month','Week'].map(h => (
+                <div key={h} style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'right' }}>{h}</div>
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+              <Row label="Gross Income" year={calc.gross} month={calc.gross/12} week={calc.gross/52} />
+              <Row
+                label="Pension Contributions (you)"
+                year={calc.employeePensionAmt}
+                month={calc.employeePensionAmt/12}
+                week={calc.employeePensionAmt/52}
+                badge={calc.employeePensionAmt > 0 ? `${fmt(calc.taxRelief)} saved!` : null}
+                subdue={calc.employeePensionAmt === 0}
+              />
+              <Row label="Employer Pension" year={calc.employerPensionAmt} month={calc.employerPensionAmt/12} week={calc.employerPensionAmt/52} subdue={calc.employerPensionAmt === 0} />
+              <Row label="Taxable Income" year={calc.taxableGross} month={calc.taxableGross/12} week={calc.taxableGross/52} />
+              <Row label="Personal Allowance" year={calc.pa} month={calc.pa/12} week={calc.pa/52} subdue />
+              <Row label="National Insurance" year={calc.ni} month={calc.ni/12} week={calc.ni/52} />
+              <Row label="Income Tax" year={calc.tax} month={calc.tax/12} week={calc.tax/52} />
+              {studentLoan && calc.studentLoanAmt > 0 && (
+                <Row label="Student Loan Repayment" year={calc.studentLoanAmt} month={calc.studentLoanAmt/12} week={calc.studentLoanAmt/52} />
+              )}
+              <div style={{ height: 1, background: '#1e293b', margin: '4px 0' }} />
+              <Row label="Take Home Pay" year={calc.takeHome} month={calc.takeHome/12} week={calc.takeHome/52} highlight />
+              <Row label="Total to Pension" year={calc.totalPension} month={calc.totalPension/12} week={calc.totalPension/52} />
+              <Row label="Employer NI Cost" year={calc.employerNI} month={calc.employerNI/12} week={calc.employerNI/52} subdue />
+            </div>
+
+            {/* Quick summary pills */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem', marginTop: '1.25rem' }}>
+              {[
+                { label: 'Take Home', value: fmt(calc.takeHome/12) + '/mo', color: '#10b981' },
+                { label: 'Income Tax', value: fmt(calc.tax), color: '#f43f5e' },
+                { label: 'Nat. Insurance', value: fmt(calc.ni), color: '#f43f5e' },
+              ].map(({ label, value, color }) => (
+                <div key={label} style={{ background: '#0a0f1e', border: '1px solid #1e293b', borderRadius: 8, padding: '0.75rem', textAlign: 'center' }}>
+                  <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginBottom: '0.3rem' }}>{label}</div>
+                  <div className="mono" style={{ color, fontWeight: 600, fontSize: '0.92rem' }}>{value}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Monthly Outgoings Donut */}
+          <div className="card fade-in">
+            <div className="section-title">Monthly Outgoings Breakdown</div>
+            <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+              <div style={{ flex: '0 0 220px', height: 220 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={donutData} cx="50%" cy="50%" innerRadius={55} outerRadius={88} paddingAngle={2} dataKey="value">
+                      {donutData.map((entry, i) => (
+                        <Cell key={i} fill={entry.color} stroke="none" />
+                      ))}
+                    </Pie>
+                    <Tooltip content={donutTooltip} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div style={{ flex: 1, minWidth: 160 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                  {donutData.map(d => (
+                    <div key={d.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <div style={{ width: 10, height: 10, borderRadius: '50%', background: d.color, flexShrink: 0 }} />
+                        <span style={{ fontSize: '0.82rem', color: '#94a3b8' }}>{d.name}</span>
+                      </div>
+                      <span className="mono" style={{ fontSize: '0.82rem', color: '#f1f5f9' }}>{fmt(d.value)}</span>
+                    </div>
+                  ))}
+                  <div style={{ borderTop: '1px solid #1e293b', paddingTop: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: '0.82rem', color: '#94a3b8' }}>Monthly surplus</span>
+                    <span className="mono" style={{ fontSize: '0.82rem', color: expenses.surplus >= 0 ? '#10b981' : '#f43f5e', fontWeight: 600 }}>{fmt(expenses.surplus)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Pension Projection Chart */}
+          <div className="card fade-in">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+              <div className="section-title" style={{ marginBottom: 0 }}>Pension Projection</div>
+              <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                Inflation adj. · {retirementAge - currentAge} yrs to retirement
+              </div>
+            </div>
+            <div style={{ height: 280 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={pensionProjection} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                  <XAxis dataKey="age" stroke="#334155" tick={{ fill: '#94a3b8', fontSize: 11, fontFamily: 'IBM Plex Mono' }} label={{ value: 'Age', position: 'insideBottomRight', offset: -5, fill: '#94a3b8', fontSize: 11 }} />
+                  <YAxis stroke="#334155" tick={{ fill: '#94a3b8', fontSize: 11, fontFamily: 'IBM Plex Mono' }} tickFormatter={v => v >= 1000000 ? `£${(v/1000000).toFixed(1)}M` : v >= 1000 ? `£${(v/1000).toFixed(0)}k` : `£${v}`} />
+                  <Tooltip content={customTooltip} />
+                  <Legend wrapperStyle={{ fontSize: '0.8rem', fontFamily: 'Sora, sans-serif', color: '#94a3b8' }} />
+                  <Line type="monotone" dataKey="high" name="High Growth (9%)" stroke="#10b981" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="normal" name="Normal Growth (5%)" stroke="#06b6d4" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="low" name="Low Growth (1%)" stroke="#f59e0b" strokeWidth={2} dot={false} strokeDasharray="5 3" />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '0.75rem', marginTop: '0.75rem' }}>
+              {[
+                { label: 'At retirement (High)', value: pensionProjection[pensionProjection.length-1]?.high || 0, color: '#10b981' },
+                { label: 'At retirement (Normal)', value: pensionProjection[pensionProjection.length-1]?.normal || 0, color: '#06b6d4' },
+                { label: 'At retirement (Low)', value: pensionProjection[pensionProjection.length-1]?.low || 0, color: '#f59e0b' },
+              ].map(({ label, value, color }) => (
+                <div key={label} style={{ background: '#0a0f1e', border: '1px solid #1e293b', borderRadius: 8, padding: '0.75rem', textAlign: 'center' }}>
+                  <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginBottom: '0.3rem' }}>{label}</div>
+                  <div className="mono" style={{ color, fontWeight: 600, fontSize: '0.88rem' }}>
+                    {value >= 1000000 ? `£${(value/1000000).toFixed(2)}M` : fmt(value)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* FI Analysis */}
+          <div className="card fade-in">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+              <div className="section-title" style={{ marginBottom: 0 }}>Financial Independence Analysis</div>
+              <div style={{
+                background: fiCalc.onTrack ? 'rgba(16,185,129,0.15)' : 'rgba(244,63,94,0.15)',
+                color: fiCalc.onTrack ? '#10b981' : '#f43f5e',
+                border: `1px solid ${fiCalc.onTrack ? 'rgba(16,185,129,0.3)' : 'rgba(244,63,94,0.3)'}`,
+                borderRadius: 6, padding: '3px 10px', fontSize: '0.75rem', fontWeight: 700,
+              }}>
+                {fiCalc.onTrack ? '✓ ON TRACK' : '✗ SHORTFALL'}
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '0.75rem', marginBottom: '1rem' }}>
+              {[
+                { label: 'FI Target', value: fiCalc.fiTarget >= 1000000 ? `£${(fiCalc.fiTarget/1000000).toFixed(2)}M` : fmt(fiCalc.fiTarget), color: '#f1f5f9' },
+                { label: 'Projected at Retirement', value: fiCalc.totalAtRetirement >= 1000000 ? `£${(fiCalc.totalAtRetirement/1000000).toFixed(2)}M` : fmt(fiCalc.totalAtRetirement), color: '#06b6d4' },
+                { label: 'Annual Retirement Income', value: fmt(fiCalc.annualRetirementIncome), color: '#10b981' },
+                { label: 'Annual Outgoings Target', value: fmt(fiCalc.annualOutgoings), color: '#94a3b8' },
+              ].map(({ label, value, color }) => (
+                <div key={label} className="fi-stat">
+                  <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginBottom: '0.4rem' }}>{label}</div>
+                  <div className="mono" style={{ color, fontWeight: 600, fontSize: '1rem' }}>{value}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Wealth chart */}
+            <div style={{ height: 260 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={wealthProjection} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+                  <defs>
+                    <linearGradient id="gPension" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0.02} />
+                    </linearGradient>
+                    <linearGradient id="gISA" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#06b6d4" stopOpacity={0.02} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                  <XAxis dataKey="age" stroke="#334155" tick={{ fill: '#94a3b8', fontSize: 11, fontFamily: 'IBM Plex Mono' }} />
+                  <YAxis stroke="#334155" tick={{ fill: '#94a3b8', fontSize: 11, fontFamily: 'IBM Plex Mono' }} tickFormatter={v => v >= 1000000 ? `£${(v/1000000).toFixed(1)}M` : `£${(v/1000).toFixed(0)}k`} />
+                  <Tooltip content={customTooltip} />
+                  <Legend wrapperStyle={{ fontSize: '0.8rem', fontFamily: 'Sora, sans-serif', color: '#94a3b8' }} />
+                  <Area type="monotone" dataKey="pension" name="Pension Wealth" stroke="#10b981" fill="url(#gPension)" strokeWidth={2} />
+                  <Area type="monotone" dataKey="isa" name="ISA Wealth" stroke="#06b6d4" fill="url(#gISA)" strokeWidth={2} />
+                  <Line type="monotone" dataKey="outgoings" name="Annual Outgoings" stroke="#f43f5e" strokeWidth={1.5} strokeDasharray="4 2" dot={false} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* State pension note */}
+          <div style={{ background: 'rgba(6,182,212,0.06)', border: '1px solid rgba(6,182,212,0.2)', borderRadius: 10, padding: '1rem 1.25rem', display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" style={{ flexShrink: 0, marginTop: 2 }}>
+              <circle cx="9" cy="9" r="8" stroke="#06b6d4" strokeWidth="1.5" />
+              <path d="M9 8v5M9 6h.01" stroke="#06b6d4" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+            <div style={{ fontSize: '0.8rem', color: '#94a3b8', lineHeight: 1.6 }}>
+              <strong style={{ color: '#06b6d4' }}>State Pension:</strong> £11,502/year (2025/26) included from age 68 for those born after 1978. Charts show real (inflation-adjusted) values. All projections assume salary sacrifice pension contributions.
+            </div>
+          </div>
+
+          {/* Salary quick links */}
+          <div className="card fade-in">
+            <div className="section-title">Quick Salary Lookup</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))', gap: '0.5rem' }}>
+              {salaryLinks.map(s => (
+                <div key={s} className="salary-link" onClick={() => setSalary(s)}>
+                  {s >= 1000 ? `£${(s/1000).toFixed(s % 1000 === 0 ? 0 : 0)}k` : fmt(s)}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Other calculators */}
+          <div className="card fade-in">
+            <div className="section-title">More Calculators</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '0.65rem' }}>
+              {[
+                { label: '🏠 Mortgage Calculator', desc: 'Monthly payments, SDLT & amortisation', href: 'mortgage-calculator.html' },
+                { label: '📈 ISA Bridging Calculator', desc: 'Plan early retirement with your ISA', href: 'isa-bridging-calculator.html' },
+                { label: '⚖️ IR35 Calculator', desc: 'Inside vs Outside IR35 comparison', href: 'ir35-calculator.html' },
+                { label: '☂️ Umbrella Calculator', desc: 'Umbrella company take-home pay', href: 'umbrella-calculator.html' },
+                { label: '🎯 How Much Do I Need?', desc: 'Calculate your retirement pot size', href: 'how-much-do-i-need-calculator.html' },
+              ].map(({ label, desc, href }) => (
+                <a key={href} href={href} style={{ textDecoration: 'none', display: 'block', background: '#0a0f1e', border: '1px solid #1e293b', borderRadius: 8, padding: '0.85rem 1rem', transition: 'border-color 0.15s, background 0.15s', cursor: 'pointer' }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor='#10b981'; e.currentTarget.style.background='rgba(16,185,129,0.04)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor='#1e293b'; e.currentTarget.style.background='#0a0f1e'; }}>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#f1f5f9', marginBottom: '0.25rem' }}>{label}</div>
+                  <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{desc}</div>
+                </a>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Footer ── */}
+      <footer style={{ borderTop: '1px solid #1e293b', background: '#111827', padding: '2.5rem 1.5rem', marginTop: '2rem' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', justifyContent: 'space-between', marginBottom: '2rem' }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.75rem' }}>
+                <svg width="18" height="18" viewBox="0 0 22 22" fill="none">
+                  <path d="M11 2L3 7v8l8 5 8-5V7L11 2z" stroke="#10b981" strokeWidth="1.8" fill="none"/>
+                  <path d="M11 6v10M7 8.5l4 2.5 4-2.5" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+                <span style={{ fontFamily: 'Sora', fontWeight: 700, color: '#f1f5f9' }}>Saving<span style={{ color: '#10b981' }}>Tool</span></span>
+              </div>
+              <p style={{ fontSize: '0.78rem', color: '#94a3b8', maxWidth: 260, lineHeight: 1.6 }}>
+                Free UK financial calculators for salaries, pensions, tax and more. Not financial advice.
+              </p>
+            </div>
+            {[
+              { title: 'Calculators', links: ['Salary Calculator','Tax Calculator','Pension Calculator','ISA Calculator','Mortgage Calculator','Stamp Duty'] },
+              { title: 'Tax Guides', links: ['Income Tax 2025','National Insurance','Student Loan Repayment','Self Assessment','Capital Gains Tax','Dividend Tax'] },
+              { title: 'Planning', links: ['FIRE Calculator','Net Worth Tracker','Budget Planner','Investment Returns','Emergency Fund'] },
+            ].map(col => (
+              <div key={col.title}>
+                <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#f1f5f9', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{col.title}</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                  {col.links.map(l => (
+                    <span key={l} style={{ fontSize: '0.78rem', color: '#94a3b8', cursor: 'pointer', transition: 'color 0.15s' }} onMouseEnter={e => e.target.style.color='#10b981'} onMouseLeave={e => e.target.style.color='#94a3b8'}>{l}</span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{ borderTop: '1px solid #1e293b', paddingTop: '1.25rem', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <span style={{ fontSize: '0.75rem', color: '#334155' }}>© 2025 SavingTool UK. All rights reserved. For informational purposes only.</span>
+            <span style={{ fontSize: '0.75rem', color: '#334155' }}>Tax rates: 2025/26 · Not FCA regulated · Not financial advice</span>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+</body>
+</html>

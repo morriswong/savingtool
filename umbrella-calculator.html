@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UK Umbrella (Inside IR35) Take-Home Calculator 2025/26 | SavingTool</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/recharts@2.12.7/umd/Recharts.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sora: ['Sora', 'sans-serif'],
+            mono: ['IBM Plex Mono', 'monospace'],
+          },
+          colors: {
+            navy: '#0a0f1e',
+            surface: '#111827',
+            border: '#1e293b',
+            emerald: { DEFAULT: '#10b981', 500: '#10b981' },
+            cyan: { DEFAULT: '#06b6d4', 500: '#06b6d4' },
+            rose: { DEFAULT: '#f43f5e', 500: '#f43f5e' },
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Sora', sans-serif; background: #0a0f1e; color: #f1f5f9; min-height: 100vh; }
+    .mono { font-family: 'IBM Plex Mono', monospace; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0a0f1e; }
+    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
+    input[type=range] { accent-color: #10b981; width: 100%; }
+    .card { background: #111827; border: 1px solid #1e293b; border-radius: 12px; padding: 1.5rem; }
+    .card-sm { background: #111827; border: 1px solid #1e293b; border-radius: 12px; padding: 1rem; }
+    .input-field {
+      background: #0a0f1e; border: 1px solid #1e293b; border-radius: 8px;
+      color: #f1f5f9; font-family: 'IBM Plex Mono', monospace; font-size: 0.95rem;
+      padding: 0.6rem 0.9rem; width: 100%; outline: none; transition: border-color 0.2s;
+    }
+    .input-field:focus { border-color: #10b981; }
+    .input-field::placeholder { color: #334155; }
+    .input-prefix { position: absolute; left: 0.9rem; top: 50%; transform: translateY(-50%); color: #94a3b8; font-family: 'IBM Plex Mono', monospace; pointer-events: none; font-size: 0.9rem; }
+    .input-suffix { position: absolute; right: 0.9rem; top: 50%; transform: translateY(-50%); color: #94a3b8; font-family: 'IBM Plex Mono', monospace; pointer-events: none; font-size: 0.9rem; }
+    .select-field {
+      background: #0a0f1e; border: 1px solid #1e293b; border-radius: 8px;
+      color: #f1f5f9; font-family: 'Sora', sans-serif; font-size: 0.85rem;
+      padding: 0.6rem 0.9rem; width: 100%; outline: none; cursor: pointer;
+      appearance: none; -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 0.9rem center; padding-right: 2.2rem;
+    }
+    .select-field:focus { border-color: #10b981; }
+    .toggle { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider { position: absolute; cursor: pointer; inset: 0; background: #1e293b; border-radius: 24px; transition: 0.3s; }
+    .toggle-slider:before { content: ''; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; background: #94a3b8; border-radius: 50%; transition: 0.3s; }
+    .toggle input:checked + .toggle-slider { background: #10b981; }
+    .toggle input:checked + .toggle-slider:before { transform: translateX(20px); background: white; }
+    .nav-link { color: #94a3b8; font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: color 0.2s; }
+    .nav-link:hover { color: #f1f5f9; }
+    .section-title { font-family: 'Sora', sans-serif; font-size: 1rem; font-weight: 700; color: #f1f5f9; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+    .section-title::before { content: ''; display: block; width: 3px; height: 1.1em; background: #10b981; border-radius: 2px; }
+    .section-title.cyan-bar::before { background: #06b6d4; }
+    .section-title.rose-bar::before { background: #f43f5e; }
+    .dropdown-menu { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 8px; background: #111827; border: 1px solid #1e293b; border-radius: 10px; padding: 0.5rem; min-width: 220px; z-index: 100; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+    .dropdown-item { padding: 0.5rem 0.75rem; border-radius: 6px; font-size: 0.82rem; color: #94a3b8; cursor: pointer; transition: all 0.15s; display: block; text-decoration: none; }
+    .dropdown-item:hover { background: rgba(255,255,255,0.05); color: #f1f5f9; }
+    .pill-toggle { display: flex; background: #0a0f1e; border: 1px solid #1e293b; border-radius: 8px; padding: 3px; gap: 3px; }
+    .pill-btn { flex: 1; padding: 0.3rem 0.6rem; border-radius: 6px; font-size: 0.78rem; font-family: 'Sora', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s; color: #94a3b8; border: none; background: none; white-space: nowrap; }
+    .pill-btn.active { background: #10b981; color: #0a0f1e; font-weight: 700; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+    .fade-in { animation: fadeIn 0.3s ease; }
+    .stat-box { background: #0a0f1e; border: 1px solid #1e293b; border-radius: 10px; padding: 1.1rem; text-align: center; }
+    .breakdown-table { width: 100%; border-collapse: collapse; }
+    .breakdown-table th { font-size: 0.72rem; font-weight: 600; color: #94a3b8; text-align: right; padding: 0.4rem 0.6rem; border-bottom: 1px solid #1e293b; font-family: 'Sora', sans-serif; text-transform: uppercase; letter-spacing: 0.04em; }
+    .breakdown-table th:first-child { text-align: left; }
+    .breakdown-table td { font-family: 'IBM Plex Mono', monospace; font-size: 0.79rem; text-align: right; padding: 0.42rem 0.6rem; border-bottom: 1px solid rgba(30,41,59,0.4); color: #f1f5f9; }
+    .breakdown-table td:first-child { font-family: 'Sora', sans-serif; font-size: 0.79rem; color: #94a3b8; text-align: left; }
+    .breakdown-table tr:hover td { background: rgba(255,255,255,0.015); }
+    .breakdown-table .section-header td { background: rgba(30,41,59,0.4); color: #64748b; font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; font-family: 'Sora', sans-serif; font-weight: 600; padding: 0.3rem 0.6rem; border-bottom: 1px solid #1e293b; }
+    .breakdown-table .negative td { color: #f43f5e; }
+    .breakdown-table .negative td:first-child { color: #94a3b8; }
+    .breakdown-table .positive td { color: #10b981; }
+    .breakdown-table .positive td:first-child { color: #94a3b8; }
+    .breakdown-table .total-row td { font-weight: 700; font-size: 0.84rem; border-top: 1px solid #1e293b; border-bottom: 1px solid #1e293b; background: rgba(16,185,129,0.06); }
+    .breakdown-table .total-row td:first-child { font-family: 'Sora', sans-serif; color: #f1f5f9; }
+    .breakdown-table .total-row.cyan-total td { background: rgba(6,182,212,0.06); }
+    .breakdown-table .total-row.rose-total td { background: rgba(244,63,94,0.06); }
+    .breakdown-table .indent td:first-child { padding-left: 1.5rem; }
+    .sensitivity-table { width: 100%; border-collapse: collapse; }
+    .sensitivity-table th { font-size: 0.72rem; font-weight: 600; color: #94a3b8; text-align: right; padding: 0.45rem 0.75rem; border-bottom: 1px solid #1e293b; font-family: 'Sora', sans-serif; text-transform: uppercase; letter-spacing: 0.04em; }
+    .sensitivity-table th:first-child { text-align: left; }
+    .sensitivity-table td { font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem; text-align: right; padding: 0.5rem 0.75rem; border-bottom: 1px solid rgba(30,41,59,0.4); color: #f1f5f9; }
+    .sensitivity-table td:first-child { font-family: 'Sora', sans-serif; text-align: left; }
+    .sensitivity-table tr.current-row td { background: rgba(16,185,129,0.1); border-top: 1px solid rgba(16,185,129,0.3); border-bottom: 1px solid rgba(16,185,129,0.3); }
+    .sensitivity-table tr.current-row td:first-child { color: #10b981; font-weight: 700; }
+    .sensitivity-table tr:not(.current-row):hover td { background: rgba(255,255,255,0.02); }
+    .summary-banner { background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(6,182,212,0.07)); border: 1px solid rgba(16,185,129,0.25); border-radius: 12px; padding: 1.25rem 1.5rem; }
+    .label-text { font-size: 0.78rem; color: #94a3b8; font-family: 'Sora', sans-serif; margin-bottom: 0.25rem; }
+    .collapsible-header { display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: 0.6rem 0; user-select: none; }
+    .collapsible-header:hover .collapsible-title { color: #f1f5f9; }
+    .collapsible-title { font-size: 0.85rem; font-weight: 600; color: #94a3b8; font-family: 'Sora', sans-serif; transition: color 0.2s; }
+    .sub-input { background: rgba(16,185,129,0.04); border: 1px solid rgba(16,185,129,0.15); border-radius: 8px; padding: 0.75rem; margin-top: 0.5rem; }
+    @media (max-width: 1100px) { .layout-cols { flex-direction: column !important; } }
+    @media (max-width: 700px) { .stats-grid { grid-template-columns: 1fr 1fr !important; } }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useMemo, useCallback, useRef, useEffect } = React;
+const { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine, Cell } = Recharts;
+
+// ─── Helpers ───────────────────────────────────────────────────────────────────
+const fmt = (n, d = 0) => '£' + (n || 0).toLocaleString('en-GB', { minimumFractionDigits: d, maximumFractionDigits: d });
+const fmtSigned = (n, d = 0) => {
+  const abs = '£' + Math.abs(n || 0).toLocaleString('en-GB', { minimumFractionDigits: d, maximumFractionDigits: d });
+  return n >= 0 ? abs : '-' + abs;
+};
+const pct = (n, d = 1) => (n || 0).toFixed(d) + '%';
+
+// ─── Tax Calculations 2025/26 ──────────────────────────────────────────────────
+function calcIncomeTax(gross, scotland) {
+  let pa = 12570;
+  if (gross > 100000) pa = Math.max(0, 12570 - Math.floor((gross - 100000) / 2));
+  const taxable = Math.max(0, gross - pa);
+  let tax = 0;
+  if (!scotland) {
+    const b1 = Math.max(0, Math.min(taxable, 50270 - pa));
+    const b2 = Math.max(0, Math.min(taxable - Math.max(0, 50270 - pa), 125140 - 50270));
+    const b3 = Math.max(0, taxable - Math.max(0, 125140 - pa));
+    tax = b1 * 0.20 + b2 * 0.40 + b3 * 0.45;
+  } else {
+    // Scottish Income Tax 2025/26
+    const bands = [
+      { limit: 2306,  rate: 0.19 },
+      { limit: 13991, rate: 0.20 },
+      { limit: 17109, rate: 0.21 },
+      { limit: 31660, rate: 0.42 },
+      { limit: 50140, rate: 0.45 },
+      { limit: Infinity, rate: 0.48 },
+    ];
+    let rem = taxable;
+    let prev = 0;
+    for (const b of bands) {
+      if (rem <= 0) break;
+      const width = b.limit - prev;
+      const chunk = Math.min(rem, width);
+      tax += chunk * b.rate;
+      rem -= chunk;
+      prev = b.limit;
+    }
+  }
+  return { tax: Math.max(0, tax), pa };
+}
+
+function calcEmployeeNI(gross) {
+  const lower = 12570, upper = 50270;
+  let ni = 0;
+  if (gross > lower) ni += Math.min(gross - lower, upper - lower) * 0.08;
+  if (gross > upper) ni += (gross - upper) * 0.02;
+  return Math.max(0, ni);
+}
+
+function calcStudentLoan(gross, plan) {
+  const thresholds = { '1': 24990, '2': 27295, '4': 31395, 'pg': 21000 };
+  const rates = { '1': 0.09, '2': 0.09, '4': 0.09, 'pg': 0.06 };
+  const thresh = thresholds[plan] || 27295;
+  const rate = rates[plan] || 0.09;
+  return Math.max(0, (gross - thresh) * rate);
+}
+
+// NEST qualifying earnings: between £6,240 and £50,270 (2025/26)
+const NEST_LOWER = 6240;
+const NEST_UPPER = 50270;
+
+function calcNEST(taxablePay) {
+  const qualifying = Math.max(0, Math.min(taxablePay, NEST_UPPER) - NEST_LOWER);
+  const employer = qualifying * 0.05;
+  const employee = qualifying * 0.05;
+  return { employer, employee, total: employer + employee };
+}
+
+// ─── Core Umbrella Calculation ─────────────────────────────────────────────────
+function calcUmbrella({
+  dayRate, weeksPerYear, marginPerWeek, feesPerWeek,
+  sippEnabled, sippMode, sippAmount,
+  nestEnabled, studentLoan, loanPlan, scotland,
+}) {
+  const daysPerWeek = 5;
+  const weeklyGross = dayRate * daysPerWeek;
+  const annualGross = weeklyGross * weeksPerYear;
+
+  // SIPP amount annually
+  let sippAnnual = 0;
+  if (sippEnabled) {
+    if (sippMode === 'day') {
+      sippAnnual = sippAmount * daysPerWeek * weeksPerYear;
+    } else {
+      // percentage of gross
+      sippAnnual = annualGross * (sippAmount / 100);
+    }
+  }
+  sippAnnual = Math.min(sippAnnual, annualGross); // can't exceed gross
+
+  // After SIPP (salary sacrifice before employer costs)
+  const afterSIPP = annualGross - sippAnnual;
+
+  // Employer deductions
+  const marginAnnual = marginPerWeek * 52;
+  const feesAnnual = feesPerWeek * 52;
+  const employerNI = Math.max(0, (afterSIPP - 5000) * 0.15);
+  const appLevy = afterSIPP * 0.005;
+
+  // Taxable employee pay (what you actually receive as PAYE)
+  const taxablePay = Math.max(0, afterSIPP - employerNI - marginAnnual - appLevy - feesAnnual);
+
+  // NEST pension (on taxable pay)
+  const nest = nestEnabled ? calcNEST(taxablePay) : { employer: 0, employee: 0, total: 0 };
+
+  // Taxable pay after DC employee contribution (student loan & income tax base)
+  // Note: employee pension contributions under NEST are not salary sacrifice, so tax on full taxable pay
+  const { tax: incomeTax } = calcIncomeTax(taxablePay, scotland);
+  const employeeNI = calcEmployeeNI(taxablePay);
+  const slAmt = studentLoan ? calcStudentLoan(taxablePay, loanPlan) : 0;
+  const dcEmployee = nest.employee;
+
+  const netTakeHome = taxablePay - incomeTax - employeeNI - slAmt - dcEmployee;
+
+  // Total pension
+  const totalPension = sippAnnual + nest.employer + nest.employee;
+
+  // Effective rates
+  const effectiveTaxRate = annualGross > 0 ? ((annualGross - netTakeHome) / annualGross) * 100 : 0;
+  const takeHomePct = annualGross > 0 ? (netTakeHome / annualGross) * 100 : 0;
+
+  return {
+    annualGross, weeklyGross,
+    sippAnnual,
+    afterSIPP,
+    marginAnnual,
+    feesAnnual,
+    employerNI,
+    employerNIRate: afterSIPP > 0 ? (employerNI / afterSIPP) * 100 : 0,
+    appLevy,
+    taxablePay,
+    nest,
+    incomeTax,
+    employeeNI,
+    slAmt,
+    dcEmployee,
+    netTakeHome,
+    totalPension,
+    effectiveTaxRate,
+    takeHomePct,
+    // complete compensation = take-home + all pensions
+    completeComp: netTakeHome + totalPension,
+  };
+}
+
+// ─── Components ────────────────────────────────────────────────────────────────
+function NumInput({ value, onChange, prefix, suffix, min = 0, max, step = 1, disabled, small }) {
+  const [local, setLocal] = useState(String(value));
+  useEffect(() => { setLocal(String(value)); }, [value]);
+  return (
+    <div style={{ position: 'relative' }}>
+      {prefix && <span className="input-prefix">{prefix}</span>}
+      <input
+        type="number"
+        className="input-field"
+        style={{
+          opacity: disabled ? 0.5 : 1,
+          cursor: disabled ? 'not-allowed' : 'auto',
+          fontSize: small ? '0.85rem' : undefined,
+          paddingTop: small ? '0.45rem' : '0.6rem',
+          paddingBottom: small ? '0.45rem' : '0.6rem',
+          paddingLeft: prefix ? (small ? '1.6rem' : '1.8rem') : (small ? '0.75rem' : '0.9rem'),
+          paddingRight: suffix ? (small ? '1.9rem' : '2.2rem') : (small ? '0.75rem' : '0.9rem'),
+        }}
+        value={local}
+        min={min} max={max} step={step}
+        disabled={disabled}
+        onChange={e => {
+          setLocal(e.target.value);
+          const v = parseFloat(e.target.value);
+          if (!isNaN(v)) onChange(v);
+        }}
+        onBlur={() => setLocal(String(value))}
+      />
+      {suffix && <span className="input-suffix">{suffix}</span>}
+    </div>
+  );
+}
+
+function Toggle({ checked, onChange }) {
+  return (
+    <label className="toggle">
+      <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} />
+      <span className="toggle-slider" />
+    </label>
+  );
+}
+
+function PillToggle({ options, value, onChange }) {
+  return (
+    <div className="pill-toggle">
+      {options.map(opt => (
+        <button key={opt.value} className={`pill-btn ${value === opt.value ? 'active' : ''}`} onClick={() => onChange(opt.value)}>
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function FieldRow({ label, hint, children }) {
+  return (
+    <div>
+      <div className="label-text">{label}{hint && <span style={{ marginLeft: 6, color: '#4b5563', fontSize: '0.72rem' }}>{hint}</span>}</div>
+      {children}
+    </div>
+  );
+}
+
+function ToggleRow({ label, checked, onChange, children }) {
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}>
+        <span className="label-text" style={{ marginBottom: 0 }}>{label}</span>
+        <Toggle checked={checked} onChange={onChange} />
+      </div>
+      {checked && children && (
+        <div className="sub-input">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StatBox({ label, value, sub, color }) {
+  return (
+    <div className="stat-box">
+      <div style={{ fontSize: '0.68rem', color: '#64748b', fontFamily: 'Sora', marginBottom: '0.35rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</div>
+      <div style={{ fontFamily: 'IBM Plex Mono', fontWeight: 700, fontSize: '1.35rem', color: color || '#f1f5f9', lineHeight: 1.15 }}>{value}</div>
+      {sub && <div style={{ fontSize: '0.7rem', color: '#64748b', fontFamily: 'IBM Plex Mono', marginTop: '0.25rem' }}>{sub}</div>}
+    </div>
+  );
+}
+
+function Collapsible({ title, defaultOpen = false, children }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div>
+      <div className="collapsible-header" onClick={() => setOpen(v => !v)}>
+        <span className="collapsible-title">{title}</span>
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ color: '#64748b', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }}>
+          <path d="M2 4l5 6 5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </div>
+      {open && <div style={{ paddingBottom: '0.5rem' }}>{children}</div>}
+    </div>
+  );
+}
+
+// ─── Main App ──────────────────────────────────────────────────────────────────
+function App() {
+  const [navOpen, setNavOpen] = useState(false);
+
+  // Inputs
+  const [dayRate, setDayRate] = useState(300);
+  const [weeksPerYear, setWeeksPerYear] = useState(47);
+  const [marginPerWeek, setMarginPerWeek] = useState(25);
+  const [feesPerWeek, setFeesPerWeek] = useState(6);
+
+  // SIPP
+  const [sippEnabled, setSippEnabled] = useState(true);
+  const [sippMode, setSippMode] = useState('day'); // 'day' | 'pct'
+  const [sippAmount, setSippAmount] = useState(25); // £/day or %
+
+  // NEST
+  const [nestEnabled, setNestEnabled] = useState(false);
+
+  // Student Loan
+  const [studentLoan, setStudentLoan] = useState(false);
+  const [loanPlan, setLoanPlan] = useState('2');
+
+  // Scotland
+  const [scotland, setScotland] = useState(false);
+
+  // ── Main result ──
+  const result = useMemo(() => calcUmbrella({
+    dayRate, weeksPerYear, marginPerWeek, feesPerWeek,
+    sippEnabled, sippMode, sippAmount,
+    nestEnabled, studentLoan, loanPlan, scotland,
+  }), [dayRate, weeksPerYear, marginPerWeek, feesPerWeek, sippEnabled, sippMode, sippAmount, nestEnabled, studentLoan, loanPlan, scotland]);
+
+  // ── Sensitivity data ──
+  const sensitivityRates = [200, 250, 300, 350, 400, 450, 500, 600, 700, 800];
+  const sensitivityData = useMemo(() => sensitivityRates.map(dr => {
+    const r = calcUmbrella({
+      dayRate: dr, weeksPerYear, marginPerWeek, feesPerWeek,
+      sippEnabled, sippMode, sippAmount,
+      nestEnabled, studentLoan, loanPlan, scotland,
+    });
+    return {
+      dayRate: dr,
+      annualGross: r.annualGross,
+      taxablePay: r.taxablePay,
+      netTakeHome: r.netTakeHome,
+      effectiveRate: r.takeHomePct,
+    };
+  }), [weeksPerYear, marginPerWeek, feesPerWeek, sippEnabled, sippMode, sippAmount, nestEnabled, studentLoan, loanPlan, scotland]);
+
+  // ── Chart data for effective rate curve ──
+  const chartData = useMemo(() => {
+    const data = [];
+    for (let dr = 200; dr <= 800; dr += 25) {
+      const r = calcUmbrella({
+        dayRate: dr, weeksPerYear, marginPerWeek, feesPerWeek,
+        sippEnabled, sippMode, sippAmount,
+        nestEnabled, studentLoan, loanPlan, scotland,
+      });
+      data.push({ dayRate: dr, takeHomePct: parseFloat(r.takeHomePct.toFixed(1)) });
+    }
+    return data;
+  }, [weeksPerYear, marginPerWeek, feesPerWeek, sippEnabled, sippMode, sippAmount, nestEnabled, studentLoan, loanPlan, scotland]);
+
+  // ── Helper: per period values ──
+  const pw = (annual) => annual / weeksPerYear; // per worked week
+  const pm = (annual) => annual / 12;
+
+  // ── SIPP label ──
+  const sippLabel = sippEnabled
+    ? (sippMode === 'day' ? `£${sippAmount}/day` : `${sippAmount}% of gross`)
+    : 'none';
+
+  const customTooltip = ({ active, payload, label }) => {
+    if (!active || !payload?.length) return null;
+    return (
+      <div style={{ background: '#111827', border: '1px solid #1e293b', borderRadius: 8, padding: '0.65rem 0.9rem', fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.76rem' }}>
+        <div style={{ color: '#94a3b8', marginBottom: '0.3rem', fontFamily: 'Sora', fontSize: '0.78rem' }}>£{label}/day</div>
+        {payload.map(p => (
+          <div key={p.dataKey} style={{ color: p.color || '#10b981' }}>{p.name}: {p.value}%</div>
+        ))}
+      </div>
+    );
+  };
+
+  return (
+    <div style={{ minHeight: '100vh', background: '#0a0f1e' }}>
+
+      {/* ── NAV ── */}
+      <nav style={{ background: 'rgba(17,24,39,0.95)', borderBottom: '1px solid #1e293b', position: 'sticky', top: 0, zIndex: 50, backdropFilter: 'blur(12px)' }}>
+        <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 60 }}>
+          <a href="index.html" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', textDecoration: 'none' }}>
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <path d="M11 2L3 7v8l8 5 8-5V7L11 2z" stroke="#10b981" strokeWidth="1.8" fill="none"/>
+              <path d="M11 6v10M7 8.5l4 2.5 4-2.5" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+            <span style={{ fontFamily: 'Sora, sans-serif', fontWeight: 700, fontSize: '1.1rem', color: '#f1f5f9' }}>
+              Saving<span style={{ color: '#10b981' }}>Tool</span>
+            </span>
+          </a>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.75rem' }}>
+            <a href="index.html" className="nav-link" style={{ textDecoration: 'none' }}>Home</a>
+            <div style={{ position: 'relative' }} onMouseEnter={() => setNavOpen(true)} onMouseLeave={() => setNavOpen(false)}>
+              <span className="nav-link" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                Calculators
+                <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 3l3 4 3-4" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round"/></svg>
+              </span>
+              {navOpen && (
+                <div className="dropdown-menu">
+                  {[
+                    { label: 'Salary & Tax', href: 'index.html' },
+                    { label: 'IR35 Calculator', href: 'ir35-calculator.html' },
+                    { label: 'Umbrella Calculator', href: 'umbrella-calculator.html' },
+                    { label: 'ISA Bridging', href: 'isa-bridging-calculator.html' },
+                    { label: 'Mortgage Calculator', href: 'mortgage-calculator.html' },
+                  ].map(item => (
+                    <a key={item.label} href={item.href} className="dropdown-item">{item.label}</a>
+                  ))}
+                </div>
+              )}
+            </div>
+            <span className="nav-link">Blog</span>
+            <span style={{ background: 'rgba(16,185,129,0.15)', color: '#10b981', border: '1px solid rgba(16,185,129,0.3)', borderRadius: 5, padding: '3px 10px', fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.08em', cursor: 'pointer' }}>
+              ADVANCED
+            </span>
+          </div>
+        </div>
+      </nav>
+
+      {/* ── HERO ── */}
+      <div style={{ maxWidth: 1400, margin: '0 auto', padding: '2.5rem 1.5rem 0' }}>
+        <a href="index.html" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#94a3b8', fontSize: '0.82rem', textDecoration: 'none', marginBottom: '1.25rem', transition: 'color 0.2s' }}
+          onMouseEnter={e => e.currentTarget.style.color='#10b981'} onMouseLeave={e => e.currentTarget.style.color='#94a3b8'}>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          All Calculators
+        </a>
+        <div style={{ marginBottom: '1.75rem' }}>
+          <h1 style={{ fontFamily: 'Sora, sans-serif', fontSize: 'clamp(1.4rem, 3vw, 2rem)', fontWeight: 800, color: '#f1f5f9', lineHeight: 1.2 }}>
+            UK Umbrella Take-Home Calculator <span style={{ color: '#10b981' }}>2025/26</span>
+          </h1>
+          <p style={{ color: '#94a3b8', marginTop: '0.4rem', fontSize: '0.88rem', maxWidth: 680 }}>
+            Calculate your net take-home pay as an Inside IR35 contractor through an umbrella company. Includes salary sacrifice pension, NEST, student loan, and Scottish tax rates.
+          </p>
+        </div>
+      </div>
+
+      {/* ── MAIN LAYOUT ── */}
+      <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 1.5rem 5rem' }}>
+        <div className="layout-cols" style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
+
+          {/* ── LEFT: INPUTS ── */}
+          <div style={{ width: 340, flexShrink: 0 }}>
+            <div className="card fade-in" style={{ borderTop: '2px solid #10b981' }}>
+              <div className="section-title">Your Details</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+
+                <FieldRow label="Day Rate (£/day)">
+                  <NumInput value={dayRate} onChange={setDayRate} prefix="£" min={50} max={5000} step={10} />
+                </FieldRow>
+
+                <FieldRow label="Weeks worked per year" hint="(ex. holidays)">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: 4 }}>
+                    <input
+                      type="range" min={1} max={52} step={1} value={weeksPerYear}
+                      onChange={e => setWeeksPerYear(Number(e.target.value))}
+                      style={{ flex: 1 }}
+                    />
+                    <div style={{ width: 64, flexShrink: 0 }}>
+                      <NumInput value={weeksPerYear} onChange={v => setWeeksPerYear(Math.min(52, Math.max(1, Math.round(v))))} min={1} max={52} step={1} small />
+                    </div>
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: '#64748b', fontFamily: 'IBM Plex Mono', marginTop: 4 }}>
+                    {weeksPerYear} weeks = {weeksPerYear * 5} working days
+                  </div>
+                </FieldRow>
+
+                <div style={{ borderTop: '1px solid #1e293b', paddingTop: '0.85rem' }}>
+                  <div style={{ fontSize: '0.72rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.75rem', fontWeight: 600 }}>Umbrella Costs</div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                    <FieldRow label="Company Margin (£/week)">
+                      <NumInput value={marginPerWeek} onChange={setMarginPerWeek} prefix="£" suffix="/wk" min={0} max={500} step={1} />
+                    </FieldRow>
+                    <FieldRow label="Umbrella Fees (£/week)">
+                      <NumInput value={feesPerWeek} onChange={setFeesPerWeek} prefix="£" suffix="/wk" min={0} max={100} step={0.5} />
+                    </FieldRow>
+                  </div>
+                </div>
+
+                <div style={{ borderTop: '1px solid #1e293b', paddingTop: '0.85rem' }}>
+                  <div style={{ fontSize: '0.72rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.75rem', fontWeight: 600 }}>Pensions</div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                    <ToggleRow label="Salary Sacrifice (SIPP)?" checked={sippEnabled} onChange={setSippEnabled}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                        <PillToggle
+                          options={[{ value: 'day', label: '£/day' }, { value: 'pct', label: '% of gross' }]}
+                          value={sippMode}
+                          onChange={setSippMode}
+                        />
+                        {sippMode === 'day' ? (
+                          <NumInput value={sippAmount} onChange={setSippAmount} prefix="£" suffix="/day" min={0} max={dayRate} step={1} />
+                        ) : (
+                          <NumInput value={sippAmount} onChange={setSippAmount} suffix="%" min={0} max={100} step={0.5} />
+                        )}
+                        <div style={{ fontSize: '0.7rem', color: '#10b981', fontFamily: 'IBM Plex Mono' }}>
+                          {fmt(result.sippAnnual)}/yr into SIPP
+                        </div>
+                      </div>
+                    </ToggleRow>
+
+                    <ToggleRow label="Additional DC Pension (NEST)?" checked={nestEnabled} onChange={setNestEnabled}>
+                      <div style={{ fontSize: '0.72rem', color: '#94a3b8', lineHeight: 1.5 }}>
+                        5% employer + 5% employee on qualifying earnings (£{NEST_LOWER.toLocaleString()}–£{NEST_UPPER.toLocaleString()})
+                      </div>
+                      {nestEnabled && (
+                        <div style={{ marginTop: '0.5rem', display: 'flex', gap: '0.5rem' }}>
+                          <div style={{ flex: 1, background: 'rgba(6,182,212,0.08)', border: '1px solid rgba(6,182,212,0.2)', borderRadius: 6, padding: '0.4rem 0.6rem', textAlign: 'center' }}>
+                            <div style={{ fontSize: '0.65rem', color: '#94a3b8' }}>Employer</div>
+                            <div style={{ fontSize: '0.78rem', color: '#06b6d4', fontFamily: 'IBM Plex Mono', fontWeight: 600 }}>{fmt(result.nest.employer)}/yr</div>
+                          </div>
+                          <div style={{ flex: 1, background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 6, padding: '0.4rem 0.6rem', textAlign: 'center' }}>
+                            <div style={{ fontSize: '0.65rem', color: '#94a3b8' }}>Employee</div>
+                            <div style={{ fontSize: '0.78rem', color: '#10b981', fontFamily: 'IBM Plex Mono', fontWeight: 600 }}>{fmt(result.nest.employee)}/yr</div>
+                          </div>
+                        </div>
+                      )}
+                    </ToggleRow>
+                  </div>
+                </div>
+
+                <div style={{ borderTop: '1px solid #1e293b', paddingTop: '0.85rem' }}>
+                  <div style={{ fontSize: '0.72rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.75rem', fontWeight: 600 }}>Other</div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                    <ToggleRow label="Student Loan?" checked={studentLoan} onChange={setStudentLoan}>
+                      <div>
+                        <div className="label-text" style={{ marginBottom: 4 }}>Repayment Plan</div>
+                        <select
+                          className="select-field"
+                          value={loanPlan}
+                          onChange={e => setLoanPlan(e.target.value)}
+                        >
+                          <option value="1">Plan 1 — threshold £24,990</option>
+                          <option value="2">Plan 2 — threshold £27,295</option>
+                          <option value="4">Plan 4 (Scotland) — threshold £31,395</option>
+                          <option value="pg">Postgrad — threshold £21,000</option>
+                        </select>
+                        {studentLoan && (
+                          <div style={{ fontSize: '0.7rem', color: '#f43f5e', fontFamily: 'IBM Plex Mono', marginTop: 4 }}>
+                            {fmt(result.slAmt)}/yr repayment
+                          </div>
+                        )}
+                      </div>
+                    </ToggleRow>
+
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span className="label-text" style={{ marginBottom: 0 }}>Resident of Scotland?</span>
+                      <Toggle checked={scotland} onChange={setScotland} />
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          {/* ── RIGHT: RESULTS ── */}
+          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+
+            {/* Summary Banner */}
+            <div className="summary-banner fade-in">
+              <p style={{ fontFamily: 'Sora', fontSize: '0.95rem', color: '#f1f5f9', lineHeight: 1.7 }}>
+                On an umbrella day rate of <span style={{ color: '#10b981', fontFamily: 'IBM Plex Mono', fontWeight: 700 }}>{fmt(dayRate)}</span>,{' '}
+                {sippEnabled ? <>salary sacrificing <span style={{ color: '#10b981', fontFamily: 'IBM Plex Mono', fontWeight: 700 }}>{sippLabel}</span> and </> : ''}
+                working <span style={{ color: '#10b981', fontFamily: 'IBM Plex Mono', fontWeight: 700 }}>{weeksPerYear} weeks</span>, you will take home{' '}
+                <span style={{ color: '#10b981', fontFamily: 'IBM Plex Mono', fontWeight: 700, fontSize: '1.05rem' }}>{fmt(result.netTakeHome)}</span> in pay
+                {result.totalPension > 0 && <> and add <span style={{ color: '#06b6d4', fontFamily: 'IBM Plex Mono', fontWeight: 700, fontSize: '1.05rem' }}>{fmt(result.totalPension)}</span> to your pension</>}.
+              </p>
+            </div>
+
+            {/* 4 Key Stats */}
+            <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '0.75rem' }}>
+              <StatBox
+                label="Taxable Pay"
+                value={fmt(result.taxablePay)}
+                sub={`${fmt(pm(result.taxablePay))}/mo`}
+                color="#f1f5f9"
+              />
+              <StatBox
+                label="Take-Home Pay"
+                value={fmt(result.netTakeHome)}
+                sub={`${fmt(pm(result.netTakeHome))}/mo`}
+                color="#10b981"
+              />
+              <StatBox
+                label="Added to Pension"
+                value={fmt(result.totalPension)}
+                sub={`${fmt(pm(result.totalPension))}/mo`}
+                color="#06b6d4"
+              />
+              <StatBox
+                label="Complete Compensation"
+                value={fmt(result.completeComp)}
+                sub={`${pct(result.takeHomePct)} take-home`}
+                color="#a78bfa"
+              />
+            </div>
+
+            {/* Full Breakdown Table */}
+            <div className="card fade-in">
+              <div className="section-title">Full Breakdown</div>
+              <div style={{ overflowX: 'auto' }}>
+                <table className="breakdown-table">
+                  <thead>
+                    <tr>
+                      <th style={{ textAlign: 'left' }}>Item</th>
+                      <th>Weekly</th>
+                      <th>Monthly</th>
+                      <th>Yearly</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {/* Gross */}
+                    <tr>
+                      <td>Gross Pay</td>
+                      <td>{fmt(result.weeklyGross)}</td>
+                      <td>{fmt(pm(result.annualGross))}</td>
+                      <td>{fmt(result.annualGross)}</td>
+                    </tr>
+                    {sippEnabled && result.sippAnnual > 0 && (
+                      <tr className="negative indent">
+                        <td>Salary Sacrifice (SIPP)</td>
+                        <td>-{fmt(pw(result.sippAnnual))}</td>
+                        <td>-{fmt(pm(result.sippAnnual))}</td>
+                        <td>-{fmt(result.sippAnnual)}</td>
+                      </tr>
+                    )}
+                    <tr style={{ fontWeight: 600 }}>
+                      <td style={{ color: '#f1f5f9', fontFamily: 'Sora', fontWeight: 600, fontSize: '0.8rem' }}>Before Deductions</td>
+                      <td>{fmt(pw(result.afterSIPP))}</td>
+                      <td>{fmt(pm(result.afterSIPP))}</td>
+                      <td>{fmt(result.afterSIPP)}</td>
+                    </tr>
+
+                    {/* Company Deductions Header */}
+                    <tr className="section-header">
+                      <td colSpan={4}>Company Deductions</td>
+                    </tr>
+                    <tr className="negative indent">
+                      <td>Employer's NI ({pct(result.employerNIRate, 1)} of after-SIPP)</td>
+                      <td>-{fmt(pw(result.employerNI))}</td>
+                      <td>-{fmt(pm(result.employerNI))}</td>
+                      <td>-{fmt(result.employerNI)}</td>
+                    </tr>
+                    <tr className="negative indent">
+                      <td>Company Margin</td>
+                      <td>-{fmt(pw(result.marginAnnual))}</td>
+                      <td>-{fmt(pm(result.marginAnnual))}</td>
+                      <td>-{fmt(result.marginAnnual)}</td>
+                    </tr>
+                    <tr className="negative indent">
+                      <td>Apprenticeship Levy (0.5%)</td>
+                      <td>-{fmt(pw(result.appLevy))}</td>
+                      <td>-{fmt(pm(result.appLevy))}</td>
+                      <td>-{fmt(result.appLevy)}</td>
+                    </tr>
+                    <tr className="negative indent">
+                      <td>Umbrella Fees</td>
+                      <td>-{fmt(pw(result.feesAnnual))}</td>
+                      <td>-{fmt(pm(result.feesAnnual))}</td>
+                      <td>-{fmt(result.feesAnnual)}</td>
+                    </tr>
+
+                    {/* Taxable Pay */}
+                    <tr className="total-row">
+                      <td>Taxable Employee Pay</td>
+                      <td>{fmt(pw(result.taxablePay))}</td>
+                      <td>{fmt(pm(result.taxablePay))}</td>
+                      <td>{fmt(result.taxablePay)}</td>
+                    </tr>
+
+                    {/* Employee Deductions Header */}
+                    <tr className="section-header">
+                      <td colSpan={4}>Employee Deductions</td>
+                    </tr>
+                    {nestEnabled && result.nest.employee > 0 && (
+                      <tr className="negative indent">
+                        <td>Employee Pension (DC/NEST 5%)</td>
+                        <td>-{fmt(pw(result.nest.employee))}</td>
+                        <td>-{fmt(pm(result.nest.employee))}</td>
+                        <td>-{fmt(result.nest.employee)}</td>
+                      </tr>
+                    )}
+                    <tr className="negative indent">
+                      <td>Income Tax</td>
+                      <td>-{fmt(pw(result.incomeTax))}</td>
+                      <td>-{fmt(pm(result.incomeTax))}</td>
+                      <td>-{fmt(result.incomeTax)}</td>
+                    </tr>
+                    <tr className="negative indent">
+                      <td>Employee NI</td>
+                      <td>-{fmt(pw(result.employeeNI))}</td>
+                      <td>-{fmt(pm(result.employeeNI))}</td>
+                      <td>-{fmt(result.employeeNI)}</td>
+                    </tr>
+                    {studentLoan && result.slAmt > 0 && (
+                      <tr className="negative indent">
+                        <td>Student Loan (Plan {loanPlan})</td>
+                        <td>-{fmt(pw(result.slAmt))}</td>
+                        <td>-{fmt(pm(result.slAmt))}</td>
+                        <td>-{fmt(result.slAmt)}</td>
+                      </tr>
+                    )}
+
+                    {/* Pensions Header */}
+                    {(sippEnabled || nestEnabled) && (
+                      <>
+                        <tr className="section-header">
+                          <td colSpan={4}>Pensions</td>
+                        </tr>
+                        {sippEnabled && result.sippAnnual > 0 && (
+                          <tr className="positive indent">
+                            <td>Added to SIPP</td>
+                            <td>+{fmt(pw(result.sippAnnual))}</td>
+                            <td>+{fmt(pm(result.sippAnnual))}</td>
+                            <td>+{fmt(result.sippAnnual)}</td>
+                          </tr>
+                        )}
+                        {nestEnabled && result.nest.total > 0 && (
+                          <>
+                            <tr className="positive indent">
+                              <td>Added to DC/NEST (employer)</td>
+                              <td>+{fmt(pw(result.nest.employer))}</td>
+                              <td>+{fmt(pm(result.nest.employer))}</td>
+                              <td>+{fmt(result.nest.employer)}</td>
+                            </tr>
+                            <tr className="positive indent">
+                              <td>Added to DC/NEST (employee)</td>
+                              <td>+{fmt(pw(result.nest.employee))}</td>
+                              <td>+{fmt(pm(result.nest.employee))}</td>
+                              <td>+{fmt(result.nest.employee)}</td>
+                            </tr>
+                          </>
+                        )}
+                        {result.totalPension > 0 && (
+                          <tr className="total-row cyan-total">
+                            <td style={{ color: '#06b6d4 !important' }}>Total Pension Contributions</td>
+                            <td style={{ color: '#06b6d4' }}>+{fmt(pw(result.totalPension))}</td>
+                            <td style={{ color: '#06b6d4' }}>+{fmt(pm(result.totalPension))}</td>
+                            <td style={{ color: '#06b6d4' }}>+{fmt(result.totalPension)}</td>
+                          </tr>
+                        )}
+                      </>
+                    )}
+
+                    {/* Totals Header */}
+                    <tr className="section-header">
+                      <td colSpan={4}>Summary</td>
+                    </tr>
+                    <tr style={{ fontWeight: 600 }}>
+                      <td style={{ color: '#f1f5f9', fontFamily: 'Sora', fontWeight: 700, fontSize: '0.8rem' }}>Taxable Employee Pay</td>
+                      <td style={{ fontWeight: 700 }}>{fmt(pw(result.taxablePay))}</td>
+                      <td style={{ fontWeight: 700 }}>{fmt(pm(result.taxablePay))}</td>
+                      <td style={{ fontWeight: 700 }}>{fmt(result.taxablePay)}</td>
+                    </tr>
+                    <tr className="negative">
+                      <td>Taxes &amp; Fees Paid ({pct((result.annualGross > 0 ? (result.annualGross - result.netTakeHome - result.totalPension) / result.annualGross * 100 : 0))} of gross)</td>
+                      <td>-{fmt(pw(result.annualGross - result.netTakeHome - result.totalPension))}</td>
+                      <td>-{fmt(pm(result.annualGross - result.netTakeHome - result.totalPension))}</td>
+                      <td>-{fmt(result.annualGross - result.netTakeHome - result.totalPension)}</td>
+                    </tr>
+                    <tr className="total-row">
+                      <td style={{ color: '#10b981' }}>Take-Home Pay ({pct(result.takeHomePct)} of gross)</td>
+                      <td style={{ color: '#10b981', fontWeight: 700 }}>{fmt(pw(result.netTakeHome))}</td>
+                      <td style={{ color: '#10b981', fontWeight: 700 }}>{fmt(pm(result.netTakeHome))}</td>
+                      <td style={{ color: '#10b981', fontWeight: 700 }}>{fmt(result.netTakeHome)}</td>
+                    </tr>
+                    {result.totalPension > 0 && (
+                      <tr className="total-row cyan-total">
+                        <td>Added to Pensions</td>
+                        <td style={{ color: '#06b6d4', fontWeight: 700 }}>+{fmt(pw(result.totalPension))}</td>
+                        <td style={{ color: '#06b6d4', fontWeight: 700 }}>+{fmt(pm(result.totalPension))}</td>
+                        <td style={{ color: '#06b6d4', fontWeight: 700 }}>+{fmt(result.totalPension)}</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Sensitivity Table */}
+            <div className="card fade-in">
+              <div className="section-title cyan-bar">Day Rate Sensitivity</div>
+              <div style={{ overflowX: 'auto' }}>
+                <table className="sensitivity-table">
+                  <thead>
+                    <tr>
+                      <th style={{ textAlign: 'left' }}>Day Rate</th>
+                      <th>Annual Gross</th>
+                      <th>Taxable Pay</th>
+                      <th>Take-Home</th>
+                      <th>Effective Rate</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sensitivityData.map(row => (
+                      <tr key={row.dayRate} className={row.dayRate === dayRate ? 'current-row' : ''}>
+                        <td>
+                          {row.dayRate === dayRate && <span style={{ marginRight: 6, fontSize: '0.65rem' }}>▶</span>}
+                          {fmt(row.dayRate)}/day
+                        </td>
+                        <td>{fmt(row.annualGross)}</td>
+                        <td>{fmt(row.taxablePay)}</td>
+                        <td style={{ color: row.dayRate === dayRate ? '#10b981' : undefined }}>{fmt(row.netTakeHome)}</td>
+                        <td style={{ color: row.dayRate === dayRate ? '#10b981' : '#94a3b8' }}>{pct(row.effectiveRate)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Effective Rate Chart */}
+            <div className="card fade-in">
+              <div className="section-title">Take-Home Rate vs. Day Rate</div>
+              <p style={{ fontSize: '0.78rem', color: '#64748b', marginBottom: '1rem' }}>Higher day rates yield a better effective take-home rate (taxes are more fixed cost at lower earnings).</p>
+              <ResponsiveContainer width="100%" height={260}>
+                <LineChart data={chartData} margin={{ top: 10, right: 20, bottom: 10, left: 10 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                  <XAxis
+                    dataKey="dayRate"
+                    tickFormatter={v => `£${v}`}
+                    tick={{ fill: '#64748b', fontSize: 11, fontFamily: 'IBM Plex Mono' }}
+                    axisLine={{ stroke: '#1e293b' }}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tickFormatter={v => `${v}%`}
+                    tick={{ fill: '#64748b', fontSize: 11, fontFamily: 'IBM Plex Mono' }}
+                    axisLine={false}
+                    tickLine={false}
+                    domain={['auto', 'auto']}
+                  />
+                  <Tooltip content={customTooltip} />
+                  <ReferenceLine x={dayRate} stroke="rgba(16,185,129,0.4)" strokeDasharray="4 3" label={{ value: `£${dayRate}`, fill: '#10b981', fontSize: 10, fontFamily: 'IBM Plex Mono' }} />
+                  <Line
+                    type="monotone"
+                    dataKey="takeHomePct"
+                    name="Take-home %"
+                    stroke="#10b981"
+                    strokeWidth={2.5}
+                    dot={false}
+                    activeDot={{ r: 5, fill: '#10b981', strokeWidth: 0 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Assumptions */}
+            <div className="card fade-in" style={{ borderTop: '2px solid #1e293b' }}>
+              <Collapsible title="Assumptions & Notes" defaultOpen={false}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem 1.5rem', marginTop: '0.75rem' }}>
+                  {[
+                    ['Tax Year', '2025/26 (6 Apr 2025 – 5 Apr 2026)'],
+                    ['Working Days', '5 days per week'],
+                    ['Personal Allowance', '£12,570 (tapered above £100,000)'],
+                    ['Basic Rate', '20% on £12,571–£50,270'],
+                    ['Higher Rate', '40% on £50,271–£125,140'],
+                    ['Additional Rate', '45% above £125,140'],
+                    ['Employer NI', '15% above £5,000 secondary threshold'],
+                    ['Employee NI', '8% on £12,570–£50,270, 2% above'],
+                    ['Apprenticeship Levy', '0.5% of gross after SIPP'],
+                    ['Salary Sacrifice', 'Reduces employer NI base (pre-tax)'],
+                    ['NEST Qualifying Earnings', `£${NEST_LOWER.toLocaleString()}–£${NEST_UPPER.toLocaleString()} (2025/26)`],
+                    ['NEST Contributions', '5% employer + 5% employee'],
+                    ['DC Employee Pension', 'Not salary sacrifice; paid from net'],
+                    ['Monthly = Annual / 12', 'Not × 4.33 weeks'],
+                    ['Student Loan rates', 'Plan 1/2/4: 9%, Postgrad: 6%'],
+                    ['Scotland', 'Uses Scottish Income Tax bands 2025/26'],
+                    ['Margin & Fees', 'Charged at 52 weeks/yr (umbrella overhead)'],
+                    ['Company profit', 'Margin is umbrella profit, fees are admin'],
+                  ].map(([k, v]) => (
+                    <div key={k} style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
+                      <span style={{ color: '#10b981', fontSize: '0.7rem', marginTop: '0.15rem', flexShrink: 0 }}>•</span>
+                      <span style={{ fontSize: '0.75rem', color: '#94a3b8', lineHeight: 1.5 }}>
+                        <strong style={{ color: '#64748b' }}>{k}:</strong> {v}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ marginTop: '0.85rem', padding: '0.65rem 0.9rem', background: 'rgba(251,191,36,0.07)', border: '1px solid rgba(251,191,36,0.18)', borderRadius: 8, fontSize: '0.75rem', color: '#fbbf24', fontFamily: 'IBM Plex Mono', lineHeight: 1.6 }}>
+                  This calculator is for illustrative purposes only. Always consult a qualified accountant or tax adviser for personal advice.
+                </div>
+              </Collapsible>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+</body>
+</html>

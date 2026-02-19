@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SavingTool – UK Mortgage Calculator 2025</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/recharts@2.12.7/umd/Recharts.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sora: ['Sora', 'sans-serif'],
+            mono: ['IBM Plex Mono', 'monospace'],
+          },
+          colors: {
+            navy: '#0a0f1e',
+            surface: '#111827',
+            border: '#1e293b',
+            emerald: { DEFAULT: '#10b981', 500: '#10b981' },
+            cyan: { DEFAULT: '#06b6d4', 500: '#06b6d4' },
+            slate: {
+              100: '#f1f5f9',
+              400: '#94a3b8',
+              700: '#334155',
+              800: '#1e293b',
+              900: '#0f172a',
+            },
+            rose: { DEFAULT: '#f43f5e', 500: '#f43f5e' },
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Sora', sans-serif;
+      background: #0a0f1e;
+      color: #f1f5f9;
+      min-height: 100vh;
+    }
+    .mono { font-family: 'IBM Plex Mono', monospace; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0a0f1e; }
+    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
+    input[type=range] { accent-color: #10b981; }
+    .card {
+      background: #111827;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+    .input-field {
+      background: #0a0f1e;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      color: #f1f5f9;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.95rem;
+      padding: 0.6rem 0.9rem;
+      width: 100%;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .input-field:focus { border-color: #10b981; }
+    .input-field::placeholder { color: #334155; }
+    .input-prefix {
+      position: absolute;
+      left: 0.9rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #94a3b8;
+      font-family: 'IBM Plex Mono', monospace;
+      pointer-events: none;
+    }
+    .input-suffix {
+      position: absolute;
+      right: 0.9rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #94a3b8;
+      font-family: 'IBM Plex Mono', monospace;
+      pointer-events: none;
+    }
+    .select-field {
+      background: #0a0f1e;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      color: #f1f5f9;
+      font-family: 'Sora', sans-serif;
+      font-size: 0.85rem;
+      padding: 0.6rem 0.9rem;
+      width: 100%;
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.9rem center;
+      padding-right: 2.2rem;
+    }
+    .select-field:focus { border-color: #10b981; }
+    .toggle {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background: #1e293b;
+      border-radius: 24px;
+      transition: 0.3s;
+    }
+    .toggle-slider:before {
+      content: '';
+      position: absolute;
+      width: 18px; height: 18px;
+      left: 3px; top: 3px;
+      background: #94a3b8;
+      border-radius: 50%;
+      transition: 0.3s;
+    }
+    .toggle input:checked + .toggle-slider { background: #10b981; }
+    .toggle input:checked + .toggle-slider:before {
+      transform: translateX(20px);
+      background: white;
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(16,185,129,0.15);
+      color: #10b981;
+      border: 1px solid rgba(16,185,129,0.3);
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-family: 'IBM Plex Mono', monospace;
+      padding: 1px 6px;
+      margin-left: 6px;
+      white-space: nowrap;
+    }
+    .nav-link {
+      color: #94a3b8;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .nav-link:hover { color: #f1f5f9; }
+    .section-title {
+      font-family: 'Sora', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #f1f5f9;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .section-title::before {
+      content: '';
+      display: block;
+      width: 3px;
+      height: 1.1em;
+      background: #10b981;
+      border-radius: 2px;
+    }
+    .plan-radio {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .plan-radio-btn {
+      padding: 0.35rem 0.8rem;
+      border-radius: 6px;
+      border: 1px solid #1e293b;
+      background: #0a0f1e;
+      color: #94a3b8;
+      font-size: 0.78rem;
+      font-family: 'Sora', sans-serif;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .plan-radio-btn.active {
+      border-color: #10b981;
+      color: #10b981;
+      background: rgba(16,185,129,0.08);
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+    .fade-in { animation: fadeIn 0.3s ease; }
+    .dropdown-menu {
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      margin-top: 8px;
+      background: #111827;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 0.5rem;
+      min-width: 200px;
+      z-index: 100;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+    .dropdown-item {
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      color: #94a3b8;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .dropdown-item:hover { background: rgba(255,255,255,0.05); color: #f1f5f9; }
+    .stat-card {
+      background: #0a0f1e;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 1.25rem;
+      text-align: center;
+    }
+    .stat-value {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 1.6rem;
+      font-weight: 600;
+      color: #10b981;
+    }
+    .stat-label {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      margin-top: 0.35rem;
+      font-weight: 500;
+    }
+    table { border-collapse: collapse; width: 100%; }
+    thead th {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 0.5rem 0.75rem;
+      text-align: right;
+      border-bottom: 1px solid #1e293b;
+    }
+    thead th:first-child { text-align: left; }
+    tbody td {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.82rem;
+      padding: 0.55rem 0.75rem;
+      text-align: right;
+      color: #94a3b8;
+      border-bottom: 1px solid rgba(30,41,59,0.5);
+    }
+    tbody td:first-child { text-align: left; color: #f1f5f9; }
+    tbody tr:hover td { background: rgba(255,255,255,0.02); }
+    tbody tr.highlight td { color: #10b981; }
+    tbody tr.highlight td:first-child { color: #10b981; }
+    .recharts-default-tooltip {
+      background: #111827 !important;
+      border: 1px solid #1e293b !important;
+      border-radius: 8px !important;
+      font-family: 'IBM Plex Mono', monospace !important;
+      font-size: 0.8rem !important;
+    }
+    @media (max-width: 1024px) {
+      .two-col { flex-direction: column !important; }
+    }
+    @media (max-width: 640px) {
+      .stat-value { font-size: 1.2rem; }
+      .card { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useMemo, useCallback, useRef, useEffect } = React;
+const {
+  AreaChart, Area, LineChart, Line,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+} = Recharts;
+
+// ─── Formatting helpers ───────────────────────────────────────────────────────
+const fmt = (n, decimals = 0) =>
+  '£' + Math.abs(n).toLocaleString('en-GB', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+const pct = (n, d = 1) => n.toFixed(d) + '%';
+
+// ─── Representative LTV rates ─────────────────────────────────────────────────
+const LTV_RATES = [
+  { maxLtv: 50, rate: 3.75 },
+  { maxLtv: 55, rate: 3.85 },
+  { maxLtv: 60, rate: 3.95 },
+  { maxLtv: 65, rate: 3.95 },
+  { maxLtv: 70, rate: 4.10 },
+  { maxLtv: 75, rate: 4.10 },
+  { maxLtv: 80, rate: 4.35 },
+  { maxLtv: 85, rate: 4.35 },
+  { maxLtv: 90, rate: 4.85 },
+  { maxLtv: 95, rate: 5.50 },
+];
+
+function getRepresentativeRate(ltv) {
+  for (const band of LTV_RATES) {
+    if (ltv <= band.maxLtv) return band.rate;
+  }
+  return 5.50;
+}
+
+// ─── Mortgage payment formula ─────────────────────────────────────────────────
+function calcMonthlyPayment(principal, annualRate, termYears) {
+  if (principal <= 0 || termYears <= 0) return 0;
+  if (annualRate === 0) return principal / (termYears * 12);
+  const r = annualRate / 100 / 12;
+  const n = termYears * 12;
+  return principal * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+}
+
+// ─── Amortisation schedule ────────────────────────────────────────────────────
+function buildAmortisation(principal, annualRate, termYears, monthlyOverpayment = 0) {
+  if (principal <= 0) return [];
+  const r = annualRate / 100 / 12;
+  const payment = calcMonthlyPayment(principal, annualRate, termYears);
+  let balance = principal;
+  const yearly = [];
+  let yearPrincipal = 0, yearInterest = 0;
+  let totalMonths = 0;
+
+  for (let month = 1; month <= termYears * 12; month++) {
+    if (balance <= 0) break;
+    const interest = r === 0 ? 0 : balance * r;
+    const principalPaid = Math.min(balance, payment - interest + monthlyOverpayment);
+    balance -= principalPaid;
+    yearPrincipal += principalPaid;
+    yearInterest += interest;
+    totalMonths = month;
+
+    if (month % 12 === 0 || balance <= 0) {
+      const yr = Math.ceil(month / 12);
+      yearly.push({
+        year: yr,
+        principalPaid: yearPrincipal,
+        interestPaid: yearInterest,
+        balance: Math.max(0, balance),
+      });
+      yearPrincipal = 0;
+      yearInterest = 0;
+    }
+    if (balance <= 0) break;
+  }
+  return yearly;
+}
+
+// ─── SDLT / LBTT ─────────────────────────────────────────────────────────────
+function calcSDLT(price, firstTimeBuyer) {
+  if (firstTimeBuyer) {
+    if (price <= 425000) return 0;
+    if (price <= 625000) {
+      return (price - 425000) * 0.05;
+    }
+    // above £625k: no FTB relief, standard rates apply
+  }
+  // Standard SDLT 2025
+  let tax = 0;
+  if (price > 250000) tax += Math.min(price - 250000, 675000) * 0.05;
+  if (price > 925000) tax += Math.min(price - 925000, 575000) * 0.10;
+  if (price > 1500000) tax += (price - 1500000) * 0.12;
+  return tax;
+}
+
+function calcLBTT(price, firstTimeBuyer) {
+  // Scotland LBTT 2025
+  let tax = 0;
+  const threshold = firstTimeBuyer ? 175000 : 145000;
+  if (price > threshold) tax += Math.min(price - threshold, 250000 - threshold) * 0.02;
+  if (price > 250000) tax += Math.min(price - 250000, 325000) * 0.05;
+  if (price > 325000) tax += Math.min(price - 325000, 750000) * 0.10;
+  if (price > 750000) tax += (price - 750000) * 0.12;
+  return tax;
+}
+
+// ─── Nav ──────────────────────────────────────────────────────────────────────
+function Nav() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  return (
+    <nav style={{ background: 'rgba(10,15,30,0.95)', borderBottom: '1px solid #1e293b', backdropFilter: 'blur(12px)', position: 'sticky', top: 0, zIndex: 50 }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 1.5rem', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+          <a href="index.html" style={{ textDecoration: 'none' }}>
+            <span style={{ fontFamily: 'Sora', fontWeight: 800, fontSize: '1.1rem', color: '#f1f5f9', letterSpacing: '-0.02em' }}>
+              Saving<span style={{ color: '#10b981' }}>Tool</span>
+            </span>
+          </a>
+          <div ref={ref} style={{ position: 'relative' }}>
+            <button
+              onClick={() => setOpen(o => !o)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem', color: open ? '#f1f5f9' : '#94a3b8', fontSize: '0.85rem', fontFamily: 'Sora', fontWeight: 500, transition: 'color 0.2s' }}
+            >
+              Calculators
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" style={{ transition: 'transform 0.2s', transform: open ? 'rotate(180deg)' : 'none' }}>
+                <path d="M5 7L1 3h8z"/>
+              </svg>
+            </button>
+            {open && (
+              <div className="dropdown-menu">
+                <a href="index.html" style={{ textDecoration: 'none' }}>
+                  <div className="dropdown-item">Salary &amp; Tax Calculator</div>
+                </a>
+                <div className="dropdown-item" style={{ color: '#10b981' }}>
+                  Mortgage Calculator
+                </div>
+              </div>
+            )}
+          </div>
+          <a href="#" className="nav-link" style={{ textDecoration: 'none' }}>Blog</a>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <span style={{ background: 'rgba(16,185,129,0.15)', color: '#10b981', border: '1px solid rgba(16,185,129,0.3)', borderRadius: '4px', fontSize: '0.65rem', fontFamily: 'IBM Plex Mono', padding: '2px 7px', letterSpacing: '0.06em' }}>ADVANCED</span>
+        </div>
+      </div>
+    </nav>
+  );
+}
+
+// ─── Toggle component ─────────────────────────────────────────────────────────
+function Toggle({ checked, onChange }) {
+  return (
+    <label className="toggle">
+      <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} />
+      <span className="toggle-slider"></span>
+    </label>
+  );
+}
+
+// ─── Radio group ──────────────────────────────────────────────────────────────
+function RadioGroup({ options, value, onChange }) {
+  return (
+    <div className="plan-radio">
+      {options.map(opt => (
+        <button
+          key={opt.value}
+          className={`plan-radio-btn${value === opt.value ? ' active' : ''}`}
+          onClick={() => onChange(opt.value)}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ─── Input with prefix/suffix ─────────────────────────────────────────────────
+function PrefixInput({ prefix, suffix, value, onChange, placeholder, min, max, step }) {
+  return (
+    <div style={{ position: 'relative' }}>
+      {prefix && <span className="input-prefix">{prefix}</span>}
+      <input
+        type="number"
+        className="input-field"
+        style={{ paddingLeft: prefix ? '1.8rem' : '0.9rem', paddingRight: suffix ? '2.2rem' : '0.9rem' }}
+        value={value}
+        onChange={e => onChange(Number(e.target.value))}
+        placeholder={placeholder}
+        min={min}
+        max={max}
+        step={step || 1}
+      />
+      {suffix && <span className="input-suffix">{suffix}</span>}
+    </div>
+  );
+}
+
+// ─── Main App ─────────────────────────────────────────────────────────────────
+function App() {
+  // Inputs
+  const [propertyValue, setPropertyValue] = useState(350000);
+  const [depositMode, setDepositMode] = useState('multiple'); // multiple | percentage | amount
+  const [depositPct, setDepositPct] = useState(10);
+  const [depositAmt, setDepositAmt] = useState(35000);
+  const [mortgageTerm, setMortgageTerm] = useState(30);
+  const [initialTermType, setInitialTermType] = useState('fixed2');
+  const [rateMode, setRateMode] = useState('representative'); // representative | custom
+  const [customRate, setCustomRate] = useState(4.5);
+  const [overpaymentEnabled, setOverpaymentEnabled] = useState(false);
+  const [monthlyOverpayment, setMonthlyOverpayment] = useState(200);
+  const [scotland, setScotland] = useState(false);
+  const [firstTimeBuyer, setFirstTimeBuyer] = useState(false);
+
+  // Derived deposit values
+  const deposit = useMemo(() => {
+    if (depositMode === 'percentage') return propertyValue * depositPct / 100;
+    if (depositMode === 'amount') return depositAmt;
+    return propertyValue * 0.10; // default for multiple mode display
+  }, [depositMode, depositPct, depositAmt, propertyValue]);
+
+  const loanAmount = Math.max(0, propertyValue - deposit);
+  const ltv = propertyValue > 0 ? (loanAmount / propertyValue) * 100 : 0;
+  const representativeRate = getRepresentativeRate(ltv);
+  const interestRate = rateMode === 'custom' ? customRate : representativeRate;
+
+  // ── Core mortgage calculation ───────────────────────────────────────────────
+  const mortgageCalc = useMemo(() => {
+    const payment = calcMonthlyPayment(loanAmount, interestRate, mortgageTerm);
+    const totalPaid = payment * mortgageTerm * 12;
+    const totalInterest = totalPaid - loanAmount;
+    const amortisation = buildAmortisation(loanAmount, interestRate, mortgageTerm);
+    return { payment, totalPaid, totalInterest, amortisation };
+  }, [loanAmount, interestRate, mortgageTerm]);
+
+  // ── Overpayment calculation ─────────────────────────────────────────────────
+  const overpaymentCalc = useMemo(() => {
+    if (!overpaymentEnabled || monthlyOverpayment <= 0) return null;
+    const basePayment = mortgageCalc.payment;
+    const baseTotalInterest = mortgageCalc.totalInterest;
+
+    // Build schedule with overpayments
+    const r = interestRate / 100 / 12;
+    let balance = loanAmount;
+    let months = 0;
+    let totalInterestPaid = 0;
+    const maxMonths = mortgageTerm * 12;
+
+    while (balance > 0.01 && months < maxMonths) {
+      const interest = r === 0 ? 0 : balance * r;
+      const principalPaid = Math.min(balance, basePayment - interest + monthlyOverpayment);
+      balance -= principalPaid;
+      totalInterestPaid += interest;
+      months++;
+    }
+
+    const monthsSaved = maxMonths - months;
+    const interestSaved = baseTotalInterest - totalInterestPaid;
+    const today = new Date();
+    const payoffDate = new Date(today.setMonth(today.getMonth() + months));
+
+    return {
+      monthsSaved,
+      interestSaved,
+      payoffDate: payoffDate.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' }),
+      newTermMonths: months,
+    };
+  }, [overpaymentEnabled, monthlyOverpayment, mortgageCalc, interestRate, loanAmount, mortgageTerm]);
+
+  // ── Amortisation with overpayments ─────────────────────────────────────────
+  const amortChartData = useMemo(() => {
+    if (overpaymentEnabled && monthlyOverpayment > 0) {
+      return buildAmortisation(loanAmount, interestRate, mortgageTerm, monthlyOverpayment);
+    }
+    return mortgageCalc.amortisation;
+  }, [overpaymentEnabled, monthlyOverpayment, loanAmount, interestRate, mortgageTerm, mortgageCalc]);
+
+  // ── Rate scenarios ──────────────────────────────────────────────────────────
+  const rateScenarios = useMemo(() => {
+    const base = interestRate;
+    return [-2, -1, 0, 1, 2].map(delta => {
+      const r = Math.max(0.1, base + delta);
+      const payment = calcMonthlyPayment(loanAmount, r, mortgageTerm);
+      return { label: delta === 0 ? 'Current' : delta > 0 ? `+${delta}%` : `${delta}%`, rate: r, payment, delta };
+    });
+  }, [interestRate, loanAmount, mortgageTerm]);
+
+  // ── Multiple deposit scenarios ──────────────────────────────────────────────
+  const depositScenarios = useMemo(() => {
+    return [5, 10, 15, 20, 25, 30, 35, 40, 45, 50].map(dp => {
+      const depAmt = propertyValue * dp / 100;
+      const loan = propertyValue - depAmt;
+      const ltvPct = 100 - dp;
+      const rate = getRepresentativeRate(ltvPct);
+      const payment = calcMonthlyPayment(loan, rate, mortgageTerm);
+      return { dp, depAmt, loan, ltvPct, rate, payment };
+    });
+  }, [propertyValue, mortgageTerm]);
+
+  // ── Stamp duty ──────────────────────────────────────────────────────────────
+  const stampDuty = useMemo(() => {
+    if (scotland) {
+      return calcLBTT(propertyValue, firstTimeBuyer);
+    }
+    return calcSDLT(propertyValue, firstTimeBuyer);
+  }, [propertyValue, scotland, firstTimeBuyer]);
+
+  // ── Chart tooltip formatter ─────────────────────────────────────────────────
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (!active || !payload || !payload.length) return null;
+    return (
+      <div style={{ background: '#111827', border: '1px solid #1e293b', borderRadius: 8, padding: '0.75rem 1rem' }}>
+        <div style={{ fontFamily: 'Sora', fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.4rem' }}>Year {label}</div>
+        {payload.map((p, i) => (
+          <div key={i} style={{ fontFamily: 'IBM Plex Mono', fontSize: '0.78rem', color: p.color, marginBottom: '0.15rem' }}>
+            {p.name}: {fmt(p.value)}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  return (
+    <div style={{ minHeight: '100vh', background: '#0a0f1e' }}>
+      <Nav />
+
+      {/* Header */}
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '2rem 1.5rem 0' }}>
+        <a href="index.html" style={{ color: '#94a3b8', fontSize: '0.8rem', fontFamily: 'Sora', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', marginBottom: '1.5rem', transition: 'color 0.2s' }}
+           onMouseEnter={e => e.currentTarget.style.color = '#f1f5f9'}
+           onMouseLeave={e => e.currentTarget.style.color = '#94a3b8'}>
+          ← All Calculators
+        </a>
+        <h1 style={{ fontFamily: 'Sora', fontWeight: 800, fontSize: '2rem', color: '#f1f5f9', letterSpacing: '-0.03em', marginBottom: '0.4rem' }}>
+          UK Mortgage Calculator
+        </h1>
+        <p style={{ color: '#94a3b8', fontSize: '0.88rem', marginBottom: '2rem' }}>
+          Calculate monthly payments, total interest, SDLT/LBTT and compare deposit scenarios — updated for 2025.
+        </p>
+      </div>
+
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 1.5rem 4rem' }}>
+        <div className="two-col" style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
+
+          {/* ─── Left: Inputs ─────────────────────────────────────────────── */}
+          <div style={{ flex: '0 0 360px', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+
+            {/* Property Value */}
+            <div className="card">
+              <div className="section-title">Property Details</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div>
+                  <label style={{ fontSize: '0.78rem', color: '#94a3b8', marginBottom: '0.4rem', display: 'block' }}>Property Value</label>
+                  <PrefixInput prefix="£" value={propertyValue} onChange={setPropertyValue} placeholder="350000" min={10000} max={10000000} step={1000} />
+                </div>
+
+                {/* Mortgage Term */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                    <label style={{ fontSize: '0.78rem', color: '#94a3b8' }}>Mortgage Term</label>
+                    <span style={{ fontFamily: 'IBM Plex Mono', fontSize: '0.85rem', color: '#10b981' }}>{mortgageTerm} years</span>
+                  </div>
+                  <input
+                    type="range" min={5} max={40} step={1}
+                    value={mortgageTerm}
+                    onChange={e => setMortgageTerm(Number(e.target.value))}
+                    style={{ width: '100%' }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: '#334155', marginTop: '0.2rem' }}>
+                    <span>5 yrs</span><span>40 yrs</span>
+                  </div>
+                </div>
+
+                {/* Initial term type */}
+                <div>
+                  <label style={{ fontSize: '0.78rem', color: '#94a3b8', marginBottom: '0.4rem', display: 'block' }}>Initial Rate Type</label>
+                  <select className="select-field" value={initialTermType} onChange={e => setInitialTermType(e.target.value)}>
+                    <option value="fixed2">Fixed Rate – 2 Year</option>
+                    <option value="fixed5">Fixed Rate – 5 Year</option>
+                    <option value="fixed10">Fixed Rate – 10 Year</option>
+                    <option value="variable">Variable / Tracker</option>
+                  </select>
+                </div>
+
+                {/* Scotland toggle */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+                  <div>
+                    <div style={{ fontSize: '0.78rem', color: '#f1f5f9' }}>Scotland property</div>
+                    <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Uses LBTT instead of SDLT</div>
+                  </div>
+                  <Toggle checked={scotland} onChange={setScotland} />
+                </div>
+              </div>
+            </div>
+
+            {/* Deposit */}
+            <div className="card">
+              <div className="section-title">Deposit</div>
+              <RadioGroup
+                options={[
+                  { value: 'multiple', label: 'Show options' },
+                  { value: 'percentage', label: 'A percentage' },
+                  { value: 'amount', label: 'An amount' },
+                ]}
+                value={depositMode}
+                onChange={setDepositMode}
+              />
+              {depositMode === 'percentage' && (
+                <div style={{ marginTop: '1rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                    <label style={{ fontSize: '0.78rem', color: '#94a3b8' }}>Deposit percentage</label>
+                    <span style={{ fontFamily: 'IBM Plex Mono', fontSize: '0.85rem', color: '#10b981' }}>{depositPct}%</span>
+                  </div>
+                  <input
+                    type="range" min={5} max={60} step={1}
+                    value={depositPct}
+                    onChange={e => setDepositPct(Number(e.target.value))}
+                    style={{ width: '100%' }}
+                  />
+                  <div style={{ marginTop: '0.6rem', fontFamily: 'IBM Plex Mono', fontSize: '0.8rem', color: '#94a3b8' }}>
+                    = {fmt(propertyValue * depositPct / 100)}
+                  </div>
+                </div>
+              )}
+              {depositMode === 'amount' && (
+                <div style={{ marginTop: '1rem' }}>
+                  <label style={{ fontSize: '0.78rem', color: '#94a3b8', marginBottom: '0.4rem', display: 'block' }}>Deposit amount</label>
+                  <PrefixInput prefix="£" value={depositAmt} onChange={setDepositAmt} placeholder="35000" min={0} max={propertyValue} step={1000} />
+                  <div style={{ marginTop: '0.6rem', fontFamily: 'IBM Plex Mono', fontSize: '0.8rem', color: '#94a3b8' }}>
+                    = {pct(propertyValue > 0 ? (depositAmt / propertyValue) * 100 : 0)} of property value
+                  </div>
+                </div>
+              )}
+              {depositMode === 'multiple' && (
+                <div style={{ marginTop: '0.75rem', fontSize: '0.78rem', color: '#94a3b8' }}>
+                  All deposit scenarios shown in the results table below.
+                </div>
+              )}
+            </div>
+
+            {/* Interest Rate */}
+            <div className="card">
+              <div className="section-title">Interest Rate</div>
+              <RadioGroup
+                options={[
+                  { value: 'representative', label: 'Representative rates' },
+                  { value: 'custom', label: 'I know the rate' },
+                ]}
+                value={rateMode}
+                onChange={setRateMode}
+              />
+              {rateMode === 'representative' && (
+                <div style={{ marginTop: '0.75rem', background: '#0a0f1e', border: '1px solid #1e293b', borderRadius: 8, padding: '0.75rem', fontSize: '0.78rem', color: '#94a3b8' }}>
+                  Based on LTV of <span style={{ color: '#06b6d4', fontFamily: 'IBM Plex Mono' }}>{pct(depositMode === 'multiple' ? 90 : ltv)}</span> — representative rate: <span style={{ color: '#10b981', fontFamily: 'IBM Plex Mono' }}>{depositMode === 'multiple' ? '4.85' : representativeRate.toFixed(2)}%</span>
+                  <div style={{ marginTop: '0.35rem', fontSize: '0.72rem', color: '#334155' }}>Based on Bank of England base rate 4.75%</div>
+                </div>
+              )}
+              {rateMode === 'custom' && (
+                <div style={{ marginTop: '1rem' }}>
+                  <label style={{ fontSize: '0.78rem', color: '#94a3b8', marginBottom: '0.4rem', display: 'block' }}>Annual interest rate</label>
+                  <PrefixInput suffix="%" value={customRate} onChange={setCustomRate} placeholder="4.5" min={0.1} max={20} step={0.05} />
+                </div>
+              )}
+            </div>
+
+            {/* Overpayments */}
+            <div className="card">
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: overpaymentEnabled ? '1rem' : 0 }}>
+                <div className="section-title" style={{ marginBottom: 0 }}>Monthly Overpayment</div>
+                <Toggle checked={overpaymentEnabled} onChange={setOverpaymentEnabled} />
+              </div>
+              {overpaymentEnabled && (
+                <div className="fade-in">
+                  <PrefixInput prefix="£" value={monthlyOverpayment} onChange={setMonthlyOverpayment} placeholder="200" min={0} max={10000} step={50} />
+                  <div style={{ marginTop: '0.5rem', fontSize: '0.72rem', color: '#94a3b8' }}>Added on top of required monthly payment</div>
+                </div>
+              )}
+            </div>
+
+          </div>
+
+          {/* ─── Right: Results ───────────────────────────────────────────── */}
+          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+
+            {/* ── Summary Stats ──────────────────────────────────────────── */}
+            {depositMode !== 'multiple' && (
+              <div className="card fade-in">
+                <div className="section-title">Summary</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+                  <div className="stat-card">
+                    <div className="stat-value">{fmt(mortgageCalc.payment, 0)}</div>
+                    <div className="stat-label">Monthly Payment</div>
+                  </div>
+                  <div className="stat-card">
+                    <div className="stat-value" style={{ color: '#f43f5e' }}>{fmt(mortgageCalc.totalInterest, 0)}</div>
+                    <div className="stat-label">Total Interest Paid</div>
+                  </div>
+                  <div className="stat-card">
+                    <div className="stat-value" style={{ color: '#06b6d4' }}>{fmt(mortgageCalc.totalPaid, 0)}</div>
+                    <div className="stat-label">Total Amount Paid</div>
+                  </div>
+                  <div className="stat-card">
+                    <div className="stat-value" style={{ color: '#94a3b8' }}>{pct(ltv)}</div>
+                    <div className="stat-label">Loan to Value (LTV)</div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ── Overpayment Impact ────────────────────────────────────── */}
+            {overpaymentEnabled && overpaymentCalc && depositMode !== 'multiple' && (
+              <div className="card fade-in" style={{ borderColor: 'rgba(16,185,129,0.3)' }}>
+                <div className="section-title">Overpayment Impact</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
+                  <div className="stat-card">
+                    <div className="stat-value" style={{ color: '#10b981', fontSize: '1.3rem' }}>
+                      {overpaymentCalc.monthsSaved >= 12
+                        ? `${Math.floor(overpaymentCalc.monthsSaved / 12)}y ${overpaymentCalc.monthsSaved % 12}m`
+                        : `${overpaymentCalc.monthsSaved}m`}
+                    </div>
+                    <div className="stat-label">Time Saved</div>
+                  </div>
+                  <div className="stat-card">
+                    <div className="stat-value" style={{ color: '#10b981', fontSize: '1.3rem' }}>{fmt(overpaymentCalc.interestSaved, 0)}</div>
+                    <div className="stat-label">Interest Saved</div>
+                  </div>
+                  <div className="stat-card">
+                    <div className="stat-value" style={{ color: '#10b981', fontSize: '1rem', lineHeight: 1.3 }}>{overpaymentCalc.payoffDate}</div>
+                    <div className="stat-label">New Payoff Date</div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ── Multiple Deposit Scenarios ────────────────────────────── */}
+            {depositMode === 'multiple' && (
+              <div className="card fade-in">
+                <div className="section-title">Deposit Scenarios</div>
+                <p style={{ fontSize: '0.78rem', color: '#94a3b8', marginBottom: '1rem' }}>
+                  Monthly payments based on property value of {fmt(propertyValue)} over {mortgageTerm} years, using representative rates.
+                </p>
+                <div style={{ overflowX: 'auto' }}>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th style={{ textAlign: 'left' }}>Deposit</th>
+                        <th>Amount</th>
+                        <th>LTV</th>
+                        <th>Rate</th>
+                        <th>Monthly</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {depositScenarios.map(s => (
+                        <tr key={s.dp} className={s.dp === 20 ? 'highlight' : ''}>
+                          <td style={{ color: s.dp === 20 ? '#10b981' : '#f1f5f9' }}>{s.dp}%</td>
+                          <td>{fmt(s.depAmt)}</td>
+                          <td>{pct(s.ltvPct)}</td>
+                          <td>{s.rate.toFixed(2)}%</td>
+                          <td style={{ color: s.dp === 20 ? '#10b981' : '#94a3b8' }}>{fmt(s.payment, 0)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* ── Rate Scenarios ────────────────────────────────────────── */}
+            {depositMode !== 'multiple' && (
+              <div className="card fade-in">
+                <div className="section-title">Rate Sensitivity</div>
+                <div style={{ overflowX: 'auto' }}>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th style={{ textAlign: 'left' }}>Scenario</th>
+                        <th>Rate</th>
+                        <th>Monthly Payment</th>
+                        <th>vs Current</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rateScenarios.map(s => (
+                        <tr key={s.label} className={s.delta === 0 ? 'highlight' : ''}>
+                          <td style={{ color: s.delta === 0 ? '#10b981' : s.delta > 0 ? '#f43f5e' : '#06b6d4' }}>
+                            {s.label}
+                          </td>
+                          <td>{s.rate.toFixed(2)}%</td>
+                          <td style={{ color: s.delta === 0 ? '#10b981' : '#94a3b8' }}>{fmt(s.payment, 0)}</td>
+                          <td style={{ color: s.delta > 0 ? '#f43f5e' : s.delta < 0 ? '#10b981' : '#94a3b8' }}>
+                            {s.delta === 0 ? '—' : (s.payment > rateScenarios[2].payment ? '+' : '') + fmt(s.payment - rateScenarios[2].payment, 0)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* ── Amortisation Chart ────────────────────────────────────── */}
+            {depositMode !== 'multiple' && amortChartData.length > 0 && (
+              <div className="card fade-in">
+                <div className="section-title">Mortgage Amortisation</div>
+                <ResponsiveContainer width="100%" height={280}>
+                  <AreaChart data={amortChartData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+                    <defs>
+                      <linearGradient id="gradPrincipal" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.25} />
+                        <stop offset="95%" stopColor="#10b981" stopOpacity={0.03} />
+                      </linearGradient>
+                      <linearGradient id="gradInterest" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.25} />
+                        <stop offset="95%" stopColor="#f43f5e" stopOpacity={0.03} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                    <XAxis
+                      dataKey="year"
+                      tick={{ fill: '#94a3b8', fontSize: 11, fontFamily: 'IBM Plex Mono' }}
+                      tickLine={false}
+                      axisLine={{ stroke: '#1e293b' }}
+                      label={{ value: 'Year', position: 'insideBottom', offset: -2, fill: '#94a3b8', fontSize: 11 }}
+                    />
+                    <YAxis
+                      tick={{ fill: '#94a3b8', fontSize: 11, fontFamily: 'IBM Plex Mono' }}
+                      tickLine={false}
+                      axisLine={false}
+                      tickFormatter={v => v >= 1000 ? `£${(v/1000).toFixed(0)}k` : `£${v}`}
+                    />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend
+                      wrapperStyle={{ fontSize: '0.75rem', fontFamily: 'Sora', paddingTop: '0.5rem' }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="principalPaid"
+                      name="Principal Paid"
+                      stroke="#10b981"
+                      strokeWidth={2}
+                      fill="url(#gradPrincipal)"
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="interestPaid"
+                      name="Interest Paid"
+                      stroke="#f43f5e"
+                      strokeWidth={2}
+                      fill="url(#gradInterest)"
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="balance"
+                      name="Remaining Balance"
+                      stroke="#06b6d4"
+                      strokeWidth={2}
+                      strokeDasharray="5 3"
+                      dot={false}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+
+            {/* ── SDLT / LBTT ──────────────────────────────────────────── */}
+            <div className="card fade-in">
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                <div className="section-title" style={{ marginBottom: 0 }}>
+                  {scotland ? 'LBTT (Scotland)' : 'Stamp Duty (SDLT)'}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>First-time buyer</span>
+                  <Toggle checked={firstTimeBuyer} onChange={setFirstTimeBuyer} />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
+                <div className="stat-card">
+                  <div className="stat-value" style={{ color: '#f43f5e', fontSize: '1.5rem' }}>{fmt(stampDuty)}</div>
+                  <div className="stat-label">{scotland ? 'LBTT' : 'SDLT'} to Pay</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-value" style={{ color: '#06b6d4', fontSize: '1.5rem' }}>
+                    {propertyValue > 0 ? pct((stampDuty / propertyValue) * 100, 2) : '0.00%'}
+                  </div>
+                  <div className="stat-label">Effective Rate</div>
+                </div>
+              </div>
+
+              {!scotland && (
+                <div>
+                  <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.75rem', fontWeight: 600 }}>
+                    SDLT Bands (England, 2025)
+                  </div>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th style={{ textAlign: 'left' }}>Band</th>
+                        <th>Rate</th>
+                        <th>On this purchase</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {firstTimeBuyer && propertyValue <= 625000 ? (
+                        <>
+                          <tr>
+                            <td>Up to £425,000</td>
+                            <td>0%</td>
+                            <td>{fmt(0)}</td>
+                          </tr>
+                          {propertyValue > 425000 && (
+                            <tr>
+                              <td>£425,001 – £625,000</td>
+                              <td>5%</td>
+                              <td>{fmt(Math.min(propertyValue - 425000, 200000) * 0.05)}</td>
+                            </tr>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <tr>
+                            <td>Up to £250,000</td>
+                            <td>0%</td>
+                            <td>{fmt(0)}</td>
+                          </tr>
+                          {propertyValue > 250000 && (
+                            <tr>
+                              <td>£250,001 – £925,000</td>
+                              <td>5%</td>
+                              <td>{fmt(Math.min(propertyValue - 250000, 675000) * 0.05)}</td>
+                            </tr>
+                          )}
+                          {propertyValue > 925000 && (
+                            <tr>
+                              <td>£925,001 – £1,500,000</td>
+                              <td>10%</td>
+                              <td>{fmt(Math.min(propertyValue - 925000, 575000) * 0.10)}</td>
+                            </tr>
+                          )}
+                          {propertyValue > 1500000 && (
+                            <tr>
+                              <td>Above £1,500,000</td>
+                              <td>12%</td>
+                              <td>{fmt((propertyValue - 1500000) * 0.12)}</td>
+                            </tr>
+                          )}
+                        </>
+                      )}
+                      <tr className="highlight">
+                        <td style={{ fontWeight: 700 }}>Total SDLT</td>
+                        <td></td>
+                        <td style={{ fontWeight: 700 }}>{fmt(stampDuty)}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  {firstTimeBuyer && propertyValue > 625000 && (
+                    <div style={{ marginTop: '0.75rem', background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.2)', borderRadius: 8, padding: '0.6rem 0.8rem', fontSize: '0.75rem', color: '#f43f5e' }}>
+                      First-time buyer relief not available above £625,000 — standard rates apply.
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {scotland && (
+                <div>
+                  <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.75rem', fontWeight: 600 }}>
+                    LBTT Bands (Scotland, 2025)
+                  </div>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th style={{ textAlign: 'left' }}>Band</th>
+                        <th>Rate</th>
+                        <th>On this purchase</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(() => {
+                        const threshold = firstTimeBuyer ? 175000 : 145000;
+                        const band1Tax = propertyValue > threshold ? Math.min(propertyValue - threshold, 250000 - threshold) * 0.02 : 0;
+                        const band2Tax = propertyValue > 250000 ? Math.min(propertyValue - 250000, 325000) * 0.05 : 0;
+                        const band3Tax = propertyValue > 325000 ? Math.min(propertyValue - 325000, 750000) * 0.10 : 0;
+                        const band4Tax = propertyValue > 750000 ? (propertyValue - 750000) * 0.12 : 0;
+                        return (
+                          <>
+                            <tr>
+                              <td>Up to {fmt(threshold)}</td>
+                              <td>0%</td>
+                              <td>{fmt(0)}</td>
+                            </tr>
+                            {propertyValue > threshold && (
+                              <tr>
+                                <td>{fmt(threshold)} – £250,000</td>
+                                <td>2%</td>
+                                <td>{fmt(band1Tax)}</td>
+                              </tr>
+                            )}
+                            {propertyValue > 250000 && (
+                              <tr>
+                                <td>£250,001 – £325,000</td>
+                                <td>5%</td>
+                                <td>{fmt(band2Tax)}</td>
+                              </tr>
+                            )}
+                            {propertyValue > 325000 && (
+                              <tr>
+                                <td>£325,001 – £750,000</td>
+                                <td>10%</td>
+                                <td>{fmt(band3Tax)}</td>
+                              </tr>
+                            )}
+                            {propertyValue > 750000 && (
+                              <tr>
+                                <td>Above £750,000</td>
+                                <td>12%</td>
+                                <td>{fmt(band4Tax)}</td>
+                              </tr>
+                            )}
+                            <tr className="highlight">
+                              <td style={{ fontWeight: 700 }}>Total LBTT</td>
+                              <td></td>
+                              <td style={{ fontWeight: 700 }}>{fmt(stampDuty)}</td>
+                            </tr>
+                          </>
+                        );
+                      })()}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* ── Disclaimer ────────────────────────────────────────────── */}
+            <div style={{ background: 'rgba(148,163,184,0.05)', border: '1px solid #1e293b', borderRadius: 8, padding: '0.75rem 1rem', fontSize: '0.72rem', color: '#94a3b8', lineHeight: 1.6 }}>
+              <strong style={{ color: '#f1f5f9' }}>Disclaimer:</strong> This calculator provides estimates for illustrative purposes only. Figures do not constitute financial advice. Always consult a qualified mortgage adviser before making financial decisions. Representative rates are indicative only and actual rates will vary by lender.
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+</body>
+</html>

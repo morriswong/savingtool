@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SavingTool – UK ISA Bridging Calculator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/recharts@2.12.7/umd/Recharts.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sora: ['Sora', 'sans-serif'],
+            mono: ['IBM Plex Mono', 'monospace'],
+          },
+          colors: {
+            navy: '#0a0f1e',
+            surface: '#111827',
+            border: '#1e293b',
+            emerald: { DEFAULT: '#10b981', 500: '#10b981' },
+            cyan: { DEFAULT: '#06b6d4', 500: '#06b6d4' },
+            slate: {
+              100: '#f1f5f9',
+              400: '#94a3b8',
+              700: '#334155',
+              800: '#1e293b',
+              900: '#0f172a',
+            },
+            rose: { DEFAULT: '#f43f5e', 500: '#f43f5e' },
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Sora', sans-serif;
+      background: #0a0f1e;
+      color: #f1f5f9;
+      min-height: 100vh;
+    }
+    .mono { font-family: 'IBM Plex Mono', monospace; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0a0f1e; }
+    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
+    input[type=range] { accent-color: #10b981; }
+    .card {
+      background: #111827;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+    .input-field {
+      background: #0a0f1e;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      color: #f1f5f9;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.95rem;
+      padding: 0.6rem 0.9rem;
+      width: 100%;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .input-field:focus { border-color: #10b981; }
+    .input-field::placeholder { color: #334155; }
+    .input-prefix {
+      position: absolute;
+      left: 0.9rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #94a3b8;
+      font-family: 'IBM Plex Mono', monospace;
+      pointer-events: none;
+    }
+    .input-suffix {
+      position: absolute;
+      right: 0.9rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #94a3b8;
+      font-family: 'IBM Plex Mono', monospace;
+      pointer-events: none;
+    }
+    .select-field {
+      background: #0a0f1e;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      color: #f1f5f9;
+      font-family: 'Sora', sans-serif;
+      font-size: 0.85rem;
+      padding: 0.6rem 0.9rem;
+      width: 100%;
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.9rem center;
+      padding-right: 2.2rem;
+    }
+    .select-field:focus { border-color: #10b981; }
+    .toggle {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background: #1e293b;
+      border-radius: 24px;
+      transition: 0.3s;
+    }
+    .toggle-slider:before {
+      content: '';
+      position: absolute;
+      width: 18px; height: 18px;
+      left: 3px; top: 3px;
+      background: #94a3b8;
+      border-radius: 50%;
+      transition: 0.3s;
+    }
+    .toggle input:checked + .toggle-slider { background: #10b981; }
+    .toggle input:checked + .toggle-slider:before {
+      transform: translateX(20px);
+      background: white;
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(16,185,129,0.15);
+      color: #10b981;
+      border: 1px solid rgba(16,185,129,0.3);
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-family: 'IBM Plex Mono', monospace;
+      padding: 1px 6px;
+      margin-left: 6px;
+      white-space: nowrap;
+    }
+    .nav-link {
+      color: #94a3b8;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .nav-link:hover { color: #f1f5f9; }
+    .section-title {
+      font-family: 'Sora', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #f1f5f9;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .section-title::before {
+      content: '';
+      display: block;
+      width: 3px;
+      height: 1.1em;
+      background: #10b981;
+      border-radius: 2px;
+    }
+    .plan-radio {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .plan-radio-btn {
+      padding: 0.35rem 0.8rem;
+      border-radius: 6px;
+      border: 1px solid #1e293b;
+      background: #0a0f1e;
+      color: #94a3b8;
+      font-size: 0.78rem;
+      font-family: 'Sora', sans-serif;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .plan-radio-btn.active {
+      border-color: #10b981;
+      color: #10b981;
+      background: rgba(16,185,129,0.08);
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+    .fade-in { animation: fadeIn 0.3s ease; }
+    .dropdown-menu {
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      margin-top: 8px;
+      background: #111827;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 0.5rem;
+      min-width: 220px;
+      z-index: 100;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+    .dropdown-item {
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      color: #94a3b8;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: block;
+      text-decoration: none;
+    }
+    .dropdown-item:hover { background: rgba(255,255,255,0.05); color: #f1f5f9; }
+    .stat-card {
+      background: #0a0f1e;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 1.25rem;
+      text-align: center;
+    }
+    .stat-value {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #10b981;
+    }
+    .stat-label {
+      font-size: 0.72rem;
+      color: #94a3b8;
+      margin-top: 0.35rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    table { border-collapse: collapse; width: 100%; }
+    thead th {
+      font-size: 0.70rem;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 0.5rem 0.6rem;
+      text-align: right;
+      border-bottom: 1px solid #1e293b;
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+    }
+    thead th:first-child { text-align: left; }
+    thead th:hover { color: #f1f5f9; }
+    thead th.sort-active { color: #10b981; }
+    tbody td {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.78rem;
+      padding: 0.45rem 0.6rem;
+      text-align: right;
+      color: #94a3b8;
+      border-bottom: 1px solid rgba(30,41,59,0.4);
+    }
+    tbody td:first-child { text-align: left; color: #f1f5f9; }
+    tbody tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
+    tbody tr:hover td { background: rgba(255,255,255,0.03); }
+    tbody tr.transition-row td { color: #06b6d4 !important; font-weight: 600; }
+    tbody tr.transition-row td:first-child { color: #06b6d4 !important; }
+    tbody tr.danger-row td { color: #f43f5e !important; }
+    tbody tr.danger-row td:first-child { color: #f43f5e !important; }
+    .recharts-tooltip-wrapper .recharts-default-tooltip {
+      background: #111827 !important;
+      border: 1px solid #1e293b !important;
+      border-radius: 8px !important;
+    }
+    .recharts-default-tooltip {
+      background: #111827 !important;
+      border: 1px solid #1e293b !important;
+      border-radius: 8px !important;
+      font-family: 'IBM Plex Mono', monospace !important;
+      font-size: 0.8rem !important;
+    }
+    @media (max-width: 1024px) {
+      .two-col { flex-direction: column !important; }
+    }
+    @media (max-width: 640px) {
+      .stat-value { font-size: 1.1rem; }
+      .card { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useMemo, useCallback, useRef, useEffect } = React;
+const {
+  ComposedChart, BarChart, Bar, LineChart, Line, Area, AreaChart,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  ReferenceLine, Cell
+} = Recharts;
+
+// ─── Formatting helpers ────────────────────────────────────────────────────────
+const fmt = (n, decimals = 0) => {
+  const abs = Math.abs(n);
+  return (n < 0 ? '-' : '') + '£' + abs.toLocaleString('en-GB', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+};
+const fmtK = (n) => {
+  const abs = Math.abs(n);
+  const sign = n < 0 ? '-' : '';
+  if (abs >= 1000000) return sign + '£' + (abs / 1000000).toFixed(1) + 'm';
+  if (abs >= 1000) return sign + '£' + (abs / 1000).toFixed(0) + 'k';
+  return sign + '£' + abs.toFixed(0);
+};
+const pct = (n, d = 2) => n.toFixed(d) + '%';
+
+// ─── ISA Simulation ───────────────────────────────────────────────────────────
+function simulateISA({ currentAge, pensionAccessAge, retirementAge, annualIncome, initialBalance, annualContribution, growthRate, feeRate, feeCap }) {
+  const growth = growthRate / 100;
+  const fee = feeRate / 100;
+  let pot = initialBalance;
+  const rows = [];
+  let totalContributions = 0;
+  let totalWithdrawals = 0;
+  let totalFees = 0;
+  let cumulativeFees = 0;
+  let runOut = false;
+  let runOutAge = null;
+
+  for (let age = currentAge; age < pensionAccessAge; age++) {
+    const isAccumulating = age < retirementAge;
+    const isDrawdown = !isAccumulating;
+
+    // Fee effective rate with cap
+    let feeAmount;
+    if (pot <= 0) {
+      feeAmount = 0;
+    } else {
+      const rawFee = pot * fee;
+      feeAmount = Math.min(rawFee, feeCap);
+    }
+    const feeEffective = pot > 0 ? feeAmount / pot : 0;
+
+    const potGrowth = pot * growth;
+    const contribution = isAccumulating ? annualContribution : 0;
+    const withdrawal = isDrawdown ? annualIncome : 0;
+
+    const newPot = pot + potGrowth - feeAmount + contribution - withdrawal;
+
+    cumulativeFees += feeAmount;
+
+    rows.push({
+      age,
+      pot: Math.max(0, newPot),
+      potBefore: pot,
+      contribution,
+      withdrawal,
+      potGrowth,
+      fees: feeAmount,
+      cumulativeFees,
+      isTransition: age === retirementAge - 1, // last accumulation year
+      isRetirementStart: age === retirementAge,
+      runOut: newPot < 0 && !runOut,
+    });
+
+    totalContributions += contribution;
+    totalWithdrawals += withdrawal;
+    totalFees += feeAmount;
+
+    if (newPot < 0 && !runOut) {
+      runOut = true;
+      runOutAge = age + 1;
+    }
+
+    pot = Math.max(0, newPot);
+  }
+
+  const finalBalance = pot;
+  const success = !runOut && finalBalance >= 0;
+  const bridgeYears = pensionAccessAge - retirementAge;
+
+  return {
+    rows,
+    totalContributions,
+    totalWithdrawals,
+    totalFees,
+    finalBalance,
+    success,
+    runOutAge,
+    bridgeYears,
+  };
+}
+
+// ─── Binary search for maximum sustainable income ────────────────────────────
+function findMaxIncome(params) {
+  let lo = 0, hi = 500000;
+  for (let i = 0; i < 50; i++) {
+    const mid = (lo + hi) / 2;
+    const result = simulateISA({ ...params, annualIncome: mid });
+    if (result.success) lo = mid;
+    else hi = mid;
+  }
+  return lo;
+}
+
+// ─── Binary search for required initial balance ───────────────────────────────
+function findRequiredBalance(params) {
+  let lo = 0, hi = 10000000;
+  for (let i = 0; i < 50; i++) {
+    const mid = (lo + hi) / 2;
+    const result = simulateISA({ ...params, initialBalance: mid });
+    if (result.success) hi = mid;
+    else lo = mid;
+  }
+  return hi;
+}
+
+// ─── Binary search for required annual contribution ───────────────────────────
+function findRequiredContribution(params) {
+  let lo = 0, hi = 200000;
+  for (let i = 0; i < 50; i++) {
+    const mid = (lo + hi) / 2;
+    const result = simulateISA({ ...params, annualContribution: mid });
+    if (result.success) hi = mid;
+    else lo = mid;
+  }
+  return hi;
+}
+
+// ─── Nav ──────────────────────────────────────────────────────────────────────
+function Nav() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  return (
+    <nav style={{ background: 'rgba(10,15,30,0.95)', borderBottom: '1px solid #1e293b', backdropFilter: 'blur(12px)', position: 'sticky', top: 0, zIndex: 50 }}>
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 1.5rem', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+          <a href="index.html" style={{ textDecoration: 'none' }}>
+            <span style={{ fontFamily: 'Sora', fontWeight: 800, fontSize: '1.1rem', color: '#f1f5f9', letterSpacing: '-0.02em' }}>
+              Saving<span style={{ color: '#10b981' }}>Tool</span>
+            </span>
+          </a>
+          <div ref={ref} style={{ position: 'relative' }}>
+            <button
+              onClick={() => setOpen(o => !o)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem', color: open ? '#f1f5f9' : '#94a3b8', fontSize: '0.85rem', fontFamily: 'Sora', fontWeight: 500, transition: 'color 0.2s' }}
+            >
+              Calculators
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" style={{ transition: 'transform 0.2s', transform: open ? 'rotate(180deg)' : 'none' }}>
+                <path d="M5 7L1 3h8z"/>
+              </svg>
+            </button>
+            {open && (
+              <div className="dropdown-menu fade-in">
+                <a href="index.html" className="dropdown-item" style={{ textDecoration: 'none' }}>Salary &amp; Tax Calculator</a>
+                <a href="mortgage-calculator.html" className="dropdown-item" style={{ textDecoration: 'none' }}>Mortgage Calculator</a>
+                <a href="isa-bridging-calculator.html" className="dropdown-item" style={{ textDecoration: 'none', color: '#10b981' }}>ISA Bridging Calculator</a>
+              </div>
+            )}
+          </div>
+          <a href="#" className="nav-link" style={{ textDecoration: 'none' }}>Blog</a>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <span style={{ background: 'rgba(16,185,129,0.15)', color: '#10b981', border: '1px solid rgba(16,185,129,0.3)', borderRadius: '4px', fontSize: '0.65rem', fontFamily: 'IBM Plex Mono', padding: '2px 7px', letterSpacing: '0.06em' }}>ADVANCED</span>
+        </div>
+      </div>
+    </nav>
+  );
+}
+
+// ─── Toggle component ─────────────────────────────────────────────────────────
+function Toggle({ checked, onChange }) {
+  return (
+    <label className="toggle">
+      <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} />
+      <span className="toggle-slider"></span>
+    </label>
+  );
+}
+
+// ─── Input with prefix/suffix ─────────────────────────────────────────────────
+function PrefixInput({ prefix, suffix, value, onChange, placeholder, min, max, step }) {
+  return (
+    <div style={{ position: 'relative' }}>
+      {prefix && <span className="input-prefix">{prefix}</span>}
+      <input
+        type="number"
+        className="input-field"
+        style={{ paddingLeft: prefix ? '1.8rem' : '0.9rem', paddingRight: suffix ? '2.5rem' : '0.9rem' }}
+        value={value}
+        onChange={e => onChange(Number(e.target.value))}
+        placeholder={placeholder}
+        min={min}
+        max={max}
+        step={step || 1}
+      />
+      {suffix && <span className="input-suffix">{suffix}</span>}
+    </div>
+  );
+}
+
+// ─── Field label row ──────────────────────────────────────────────────────────
+function Field({ label, hint, children }) {
+  return (
+    <div style={{ marginBottom: '1rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '0.35rem' }}>
+        <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#94a3b8' }}>{label}</label>
+        {hint && <span style={{ fontSize: '0.72rem', color: '#334155', fontFamily: 'IBM Plex Mono' }}>{hint}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+// ─── Custom Tooltip ───────────────────────────────────────────────────────────
+function CustomTooltip({ active, payload, label }) {
+  if (!active || !payload || !payload.length) return null;
+  return (
+    <div style={{ background: '#111827', border: '1px solid #1e293b', borderRadius: 8, padding: '0.75rem 1rem', fontFamily: 'IBM Plex Mono', fontSize: '0.78rem' }}>
+      <div style={{ color: '#f1f5f9', fontWeight: 600, marginBottom: '0.4rem' }}>Age {label}</div>
+      {payload.map((p, i) => (
+        p.value !== 0 && p.value !== null && p.value !== undefined &&
+        <div key={i} style={{ color: p.color || '#94a3b8', display: 'flex', gap: '0.75rem', justifyContent: 'space-between' }}>
+          <span>{p.name}</span>
+          <span>{fmt(p.value)}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── Main App ─────────────────────────────────────────────────────────────────
+function App() {
+  // Mode toggle: 'income' or 'age'
+  const [mode, setMode] = useState('income');
+
+  // Inputs
+  const [currentAge, setCurrentAge] = useState(35);
+  const [pensionAccessAge, setPensionAccessAge] = useState(57);
+  const [targetIncome, setTargetIncome] = useState(30000);
+  const [currentBalance, setCurrentBalance] = useState(50000);
+  const [annualContribution, setAnnualContribution] = useState(20000);
+  const [growthRate, setGrowthRate] = useState(5);
+  const [feeRate, setFeeRate] = useState(0.22);
+  const [feeCap, setFeeCap] = useState(875);
+  const [targetRetirementAge, setTargetRetirementAge] = useState(45);
+
+  // Table sort
+  const [sortCol, setSortCol] = useState('age');
+  const [sortDir, setSortDir] = useState('asc');
+
+  // Derived: retirement age
+  const retirementAge = mode === 'income'
+    ? Math.min(targetRetirementAge, pensionAccessAge - 1)
+    : targetRetirementAge;
+
+  // Clamp retirement age
+  const safeRetirementAge = Math.max(currentAge + 1, Math.min(retirementAge, pensionAccessAge - 1));
+
+  // Core simulation
+  const result = useMemo(() => {
+    if (currentAge >= pensionAccessAge) return null;
+    return simulateISA({
+      currentAge,
+      pensionAccessAge,
+      retirementAge: safeRetirementAge,
+      annualIncome: targetIncome,
+      initialBalance: currentBalance,
+      annualContribution,
+      growthRate,
+      feeRate,
+      feeCap,
+    });
+  }, [currentAge, pensionAccessAge, safeRetirementAge, targetIncome, currentBalance, annualContribution, growthRate, feeRate, feeCap]);
+
+  // Adjustments panel calculations
+  const adjustments = useMemo(() => {
+    if (!result || result.success) return null;
+    const base = { currentAge, pensionAccessAge, retirementAge: safeRetirementAge, initialBalance: currentBalance, annualContribution, growthRate, feeRate, feeCap };
+    const maxIncome = findMaxIncome({ ...base, annualIncome: targetIncome });
+    const reqBalance = findRequiredBalance({ ...base, annualIncome: targetIncome });
+    const reqContrib = findRequiredContribution({ ...base, annualIncome: targetIncome });
+    return { maxIncome, reqBalance, reqContrib };
+  }, [result, currentAge, pensionAccessAge, safeRetirementAge, currentBalance, annualContribution, growthRate, feeRate, feeCap, targetIncome]);
+
+  // Chart data
+  const chartData = useMemo(() => {
+    if (!result) return [];
+    return result.rows.map(r => ({
+      age: r.age,
+      balance: Math.max(0, r.pot),
+      contributions: r.contribution > 0 ? r.contribution : null,
+      withdrawals: r.withdrawal > 0 ? r.withdrawal : null,
+    }));
+  }, [result]);
+
+  // Table data with sorting
+  const tableRows = useMemo(() => {
+    if (!result) return [];
+    const rows = result.rows.map(r => ({
+      age: r.age,
+      contributions: r.contribution,
+      withdrawals: r.withdrawal,
+      balance: r.pot,
+      potGrowth: r.potGrowth,
+      fees: r.fees,
+      cumulativeFees: r.cumulativeFees,
+      isTransition: r.age === safeRetirementAge - 1,
+      isRetirementStart: r.age === safeRetirementAge,
+      runOut: r.runOut,
+    }));
+
+    const colMap = { age: 'age', contributions: 'contributions', withdrawals: 'withdrawals', balance: 'balance', potGrowth: 'potGrowth', fees: 'fees', cumulativeFees: 'cumulativeFees' };
+    const key = colMap[sortCol] || 'age';
+    return [...rows].sort((a, b) => {
+      const av = a[key], bv = b[key];
+      return sortDir === 'asc' ? av - bv : bv - av;
+    });
+  }, [result, sortCol, sortDir, safeRetirementAge]);
+
+  function handleSort(col) {
+    if (sortCol === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    else { setSortCol(col); setSortDir('asc'); }
+  }
+
+  function SortIndicator({ col }) {
+    if (sortCol !== col) return <span style={{ color: '#334155' }}> ↕</span>;
+    return <span style={{ color: '#10b981' }}>{sortDir === 'asc' ? ' ↑' : ' ↓'}</span>;
+  }
+
+  const accYears = safeRetirementAge - currentAge;
+  const drawdownYears = pensionAccessAge - safeRetirementAge;
+
+  const isValid = currentAge < pensionAccessAge && safeRetirementAge > currentAge && safeRetirementAge < pensionAccessAge;
+
+  return (
+    <div style={{ minHeight: '100vh', background: '#0a0f1e' }}>
+      <Nav />
+
+      {/* Hero */}
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '2rem 1.5rem 0' }}>
+        <div style={{ marginBottom: '0.4rem' }}>
+          <a href="index.html" style={{ color: '#94a3b8', fontSize: '0.8rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.3rem', transition: 'color 0.2s' }}
+            onMouseOver={e => e.currentTarget.style.color = '#f1f5f9'}
+            onMouseOut={e => e.currentTarget.style.color = '#94a3b8'}
+          >
+            ← All Calculators
+          </a>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
+          <div>
+            <h1 style={{ fontFamily: 'Sora', fontWeight: 800, fontSize: '1.9rem', color: '#f1f5f9', letterSpacing: '-0.03em', lineHeight: 1.15 }}>
+              ISA Bridging <span style={{ color: '#10b981' }}>Calculator</span>
+            </h1>
+            <p style={{ color: '#94a3b8', fontSize: '0.88rem', marginTop: '0.5rem', maxWidth: 560 }}>
+              Plan your early retirement by using your Stocks & Shares ISA to bridge the gap until you can access your pension.
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+            <span className="badge">2025/26</span>
+            <span style={{ background: 'rgba(6,182,212,0.12)', color: '#06b6d4', border: '1px solid rgba(6,182,212,0.25)', borderRadius: 4, fontSize: '0.7rem', fontFamily: 'IBM Plex Mono', padding: '1px 7px' }}>ISA</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Main layout */}
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 1.5rem 4rem' }}>
+        <div className="two-col" style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
+
+          {/* LEFT: Inputs */}
+          <div style={{ width: '360px', flexShrink: 0 }}>
+
+            {/* Mode selector */}
+            <div className="card" style={{ marginBottom: '1rem' }}>
+              <div className="section-title">Calculate by</div>
+              <div className="plan-radio">
+                <button className={`plan-radio-btn${mode === 'income' ? ' active' : ''}`} onClick={() => setMode('income')}>
+                  Target Annual Income
+                </button>
+                <button className={`plan-radio-btn${mode === 'age' ? ' active' : ''}`} onClick={() => setMode('age')}>
+                  Target Retirement Age
+                </button>
+              </div>
+              {mode === 'income' && (
+                <p style={{ fontSize: '0.75rem', color: '#334155', marginTop: '0.75rem', fontFamily: 'IBM Plex Mono' }}>
+                  Set your desired income. We'll show if your ISA can sustain it.
+                </p>
+              )}
+              {mode === 'age' && (
+                <p style={{ fontSize: '0.75rem', color: '#334155', marginTop: '0.75rem', fontFamily: 'IBM Plex Mono' }}>
+                  Set a retirement age and see what income level is achievable.
+                </p>
+              )}
+            </div>
+
+            {/* Core inputs */}
+            <div className="card" style={{ marginBottom: '1rem' }}>
+              <div className="section-title">Your Situation</div>
+
+              <Field label="Current Age">
+                <PrefixInput value={currentAge} onChange={v => setCurrentAge(Math.max(18, Math.min(70, v)))} min={18} max={70} suffix="yrs" />
+              </Field>
+
+              <Field label="Pension Access Age" hint="Currently 57 from 2028">
+                <PrefixInput value={pensionAccessAge} onChange={v => setPensionAccessAge(Math.max(55, Math.min(75, v)))} min={55} max={75} suffix="yrs" />
+              </Field>
+
+              {mode === 'age' && (
+                <Field label="Target Retirement Age">
+                  <PrefixInput
+                    value={targetRetirementAge}
+                    onChange={v => setTargetRetirementAge(Math.max(currentAge + 1, Math.min(pensionAccessAge - 1, v)))}
+                    min={currentAge + 1}
+                    max={pensionAccessAge - 1}
+                    suffix="yrs"
+                  />
+                </Field>
+              )}
+
+              {mode === 'income' && (
+                <Field label="Target Annual Income" hint="Post-tax £">
+                  <PrefixInput prefix="£" value={targetIncome} onChange={v => setTargetIncome(Math.max(0, v))} min={0} step={500} />
+                </Field>
+              )}
+
+              {mode === 'income' && (
+                <Field label="Target Retirement Age">
+                  <PrefixInput
+                    value={targetRetirementAge}
+                    onChange={v => setTargetRetirementAge(Math.max(currentAge + 1, Math.min(pensionAccessAge - 1, v)))}
+                    min={currentAge + 1}
+                    max={pensionAccessAge - 1}
+                    suffix="yrs"
+                  />
+                </Field>
+              )}
+            </div>
+
+            {/* ISA inputs */}
+            <div className="card" style={{ marginBottom: '1rem' }}>
+              <div className="section-title">ISA Details</div>
+
+              <Field label="Current ISA Balance">
+                <PrefixInput prefix="£" value={currentBalance} onChange={v => setCurrentBalance(Math.max(0, v))} min={0} step={1000} />
+              </Field>
+
+              <Field label="Annual ISA Contributions" hint="Max £20,000/yr">
+                <PrefixInput prefix="£" value={annualContribution} onChange={v => setAnnualContribution(Math.max(0, Math.min(20000, v)))} min={0} max={20000} step={500} />
+              </Field>
+
+              <Field label="Expected Investment Growth">
+                <PrefixInput suffix="%" value={growthRate} onChange={v => setGrowthRate(Math.max(0, Math.min(20, v)))} min={0} max={20} step={0.5} />
+              </Field>
+            </div>
+
+            {/* Fee inputs */}
+            <div className="card">
+              <div className="section-title">Fund Fees</div>
+              <p style={{ fontSize: '0.74rem', color: '#334155', marginBottom: '1rem', fontFamily: 'IBM Plex Mono' }}>
+                Many platforms cap annual fees. Enter your OCF/platform fee and cap.
+              </p>
+
+              <Field label="Fund / Platform Fee" hint="OCF + platform">
+                <PrefixInput suffix="%" value={feeRate} onChange={v => setFeeRate(Math.max(0, Math.min(5, v)))} min={0} max={5} step={0.01} />
+              </Field>
+
+              <Field label="Annual Fee Cap" hint="e.g. Vanguard £875">
+                <PrefixInput prefix="£" value={feeCap} onChange={v => setFeeCap(Math.max(0, v))} min={0} step={25} />
+              </Field>
+
+              {mode === 'age' && (
+                <Field label="Target Annual Income" hint="Post-tax £">
+                  <PrefixInput prefix="£" value={targetIncome} onChange={v => setTargetIncome(Math.max(0, v))} min={0} step={500} />
+                </Field>
+              )}
+            </div>
+          </div>
+
+          {/* RIGHT: Results */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+
+            {!isValid && (
+              <div className="card fade-in" style={{ border: '1px solid rgba(244,63,94,0.3)', background: 'rgba(244,63,94,0.05)', marginBottom: '1rem' }}>
+                <p style={{ color: '#f43f5e', fontSize: '0.85rem' }}>Please check your inputs — current age must be less than pension access age, and retirement age must be between the two.</p>
+              </div>
+            )}
+
+            {result && isValid && (
+              <>
+                {/* Status banner */}
+                {result.success ? (
+                  <div className="card fade-in" style={{ border: '1px solid rgba(16,185,129,0.35)', background: 'rgba(16,185,129,0.07)', marginBottom: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+                      <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(16,185,129,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                          <path d="M3 8l3.5 3.5L13 4.5" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: 700, color: '#10b981', fontSize: '0.95rem', marginBottom: '0.25rem' }}>
+                          Goal reached!
+                        </div>
+                        {mode === 'income' ? (
+                          <div style={{ color: '#94a3b8', fontSize: '0.83rem' }}>
+                            Your ISA can sustain <span style={{ color: '#f1f5f9', fontFamily: 'IBM Plex Mono', fontWeight: 600 }}>{fmt(targetIncome)}/yr</span> from age <span style={{ color: '#f1f5f9' }}>{safeRetirementAge}</span> until your pension access at age <span style={{ color: '#f1f5f9' }}>{pensionAccessAge}</span>. Final ISA balance: <span style={{ color: '#10b981', fontFamily: 'IBM Plex Mono' }}>{fmt(result.finalBalance)}</span>.
+                          </div>
+                        ) : (
+                          <div style={{ color: '#94a3b8', fontSize: '0.83rem' }}>
+                            Retiring at age <span style={{ color: '#f1f5f9' }}>{safeRetirementAge}</span>, your ISA can sustain <span style={{ color: '#f1f5f9', fontFamily: 'IBM Plex Mono', fontWeight: 600 }}>{fmt(targetIncome)}/yr</span> until pension access at age <span style={{ color: '#f1f5f9' }}>{pensionAccessAge}</span>. Final ISA balance: <span style={{ color: '#10b981', fontFamily: 'IBM Plex Mono' }}>{fmt(result.finalBalance)}</span>.
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="card fade-in" style={{ border: '1px solid rgba(244,63,94,0.35)', background: 'rgba(244,63,94,0.07)', marginBottom: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+                      <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(244,63,94,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                          <path d="M8 4v5M8 11v1" stroke="#f43f5e" strokeWidth="2" strokeLinecap="round"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: 700, color: '#f43f5e', fontSize: '0.95rem', marginBottom: '0.25rem' }}>
+                          Shortfall detected
+                        </div>
+                        <div style={{ color: '#94a3b8', fontSize: '0.83rem' }}>
+                          At <span style={{ color: '#f1f5f9', fontFamily: 'IBM Plex Mono', fontWeight: 600 }}>{fmt(targetIncome)}/yr</span>, your ISA runs out at age <span style={{ color: '#f43f5e', fontFamily: 'IBM Plex Mono', fontWeight: 600 }}>{result.runOutAge || '?'}</span> — {result.runOutAge ? pensionAccessAge - result.runOutAge : 0} year(s) before pension access. See adjustments below.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Summary stats */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.75rem', marginBottom: '1rem' }}>
+                  <div className="stat-card">
+                    <div className="stat-value" style={{ color: '#10b981' }}>{fmtK(result.totalContributions)}</div>
+                    <div className="stat-label">Total Contributions</div>
+                  </div>
+                  <div className="stat-card">
+                    <div className="stat-value" style={{ color: '#f43f5e' }}>{fmtK(result.totalWithdrawals)}</div>
+                    <div className="stat-label">Total Withdrawals</div>
+                  </div>
+                  <div className="stat-card">
+                    <div className="stat-value" style={{ color: '#94a3b8' }}>{fmtK(result.totalFees)}</div>
+                    <div className="stat-label">Total Fees Paid</div>
+                  </div>
+                  <div className="stat-card">
+                    <div className="stat-value" style={{ color: result.finalBalance > 0 ? '#06b6d4' : '#f43f5e' }}>{fmtK(result.finalBalance)}</div>
+                    <div className="stat-label">Balance at Pension Age</div>
+                  </div>
+                </div>
+
+                {/* Bridge summary row */}
+                <div className="card" style={{ marginBottom: '1rem', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', padding: '1rem 1.5rem' }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontFamily: 'IBM Plex Mono', fontWeight: 600, fontSize: '1.1rem', color: '#f1f5f9' }}>{accYears} yrs</div>
+                    <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: 2, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Accumulation Phase</div>
+                    <div style={{ fontSize: '0.7rem', color: '#334155', fontFamily: 'IBM Plex Mono', marginTop: 2 }}>Age {currentAge} → {safeRetirementAge}</div>
+                  </div>
+                  <div style={{ textAlign: 'center', borderLeft: '1px solid #1e293b', borderRight: '1px solid #1e293b' }}>
+                    <div style={{ fontFamily: 'IBM Plex Mono', fontWeight: 600, fontSize: '1.1rem', color: drawdownYears > 0 ? '#06b6d4' : '#334155' }}>{drawdownYears} yrs</div>
+                    <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: 2, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Bridging Phase</div>
+                    <div style={{ fontSize: '0.7rem', color: '#334155', fontFamily: 'IBM Plex Mono', marginTop: 2 }}>Age {safeRetirementAge} → {pensionAccessAge}</div>
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontFamily: 'IBM Plex Mono', fontWeight: 600, fontSize: '1.1rem', color: '#10b981' }}>{fmt(targetIncome)}</div>
+                    <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: 2, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Annual Income</div>
+                    <div style={{ fontSize: '0.7rem', color: '#334155', fontFamily: 'IBM Plex Mono', marginTop: 2 }}>{fmt(targetIncome / 12)}/mo</div>
+                  </div>
+                </div>
+
+                {/* Chart */}
+                <div className="card" style={{ marginBottom: '1rem' }}>
+                  <div className="section-title">ISA Balance Over Time</div>
+                  <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '1rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <span style={{ width: 10, height: 10, borderRadius: 2, background: '#10b981', display: 'inline-block', opacity: 0.7 }}></span>
+                      Contributions
+                    </span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <span style={{ width: 10, height: 10, borderRadius: 2, background: '#f43f5e', display: 'inline-block', opacity: 0.7 }}></span>
+                      Withdrawals
+                    </span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <span style={{ width: 24, height: 2, background: '#06b6d4', display: 'inline-block' }}></span>
+                      ISA Balance
+                    </span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <span style={{ width: 1, height: 12, background: '#334155', borderStyle: 'dashed', borderWidth: '0 0 0 1px', borderColor: '#334155', display: 'inline-block' }}></span>
+                      Retirement
+                    </span>
+                  </div>
+                  <ResponsiveContainer width="100%" height={280}>
+                    <ComposedChart data={chartData} margin={{ top: 4, right: 12, left: 8, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
+                      <XAxis
+                        dataKey="age"
+                        tick={{ fontFamily: 'IBM Plex Mono', fontSize: 11, fill: '#94a3b8' }}
+                        tickLine={false}
+                        axisLine={{ stroke: '#1e293b' }}
+                        label={{ value: 'Age', position: 'insideBottom', offset: -2, fontFamily: 'IBM Plex Mono', fontSize: 11, fill: '#94a3b8' }}
+                      />
+                      <YAxis
+                        yAxisId="balance"
+                        orientation="left"
+                        tick={{ fontFamily: 'IBM Plex Mono', fontSize: 10, fill: '#94a3b8' }}
+                        tickLine={false}
+                        axisLine={false}
+                        tickFormatter={v => fmtK(v)}
+                        width={60}
+                      />
+                      <YAxis
+                        yAxisId="flows"
+                        orientation="right"
+                        tick={{ fontFamily: 'IBM Plex Mono', fontSize: 10, fill: '#94a3b8' }}
+                        tickLine={false}
+                        axisLine={false}
+                        tickFormatter={v => fmtK(v)}
+                        width={55}
+                      />
+                      <Tooltip content={<CustomTooltip />} />
+                      <ReferenceLine
+                        yAxisId="balance"
+                        x={safeRetirementAge}
+                        stroke="#334155"
+                        strokeDasharray="4 3"
+                        label={{ value: `Retire ${safeRetirementAge}`, position: 'top', fontFamily: 'IBM Plex Mono', fontSize: 10, fill: '#94a3b8', dy: -4 }}
+                      />
+                      <Bar yAxisId="flows" dataKey="contributions" name="Contributions" fill="#10b981" opacity={0.65} barSize={10} />
+                      <Bar yAxisId="flows" dataKey="withdrawals" name="Withdrawals" fill="#f43f5e" opacity={0.65} barSize={10} />
+                      <Line
+                        yAxisId="balance"
+                        type="monotone"
+                        dataKey="balance"
+                        name="ISA Balance"
+                        stroke="#06b6d4"
+                        strokeWidth={2.5}
+                        dot={false}
+                        activeDot={{ r: 4, fill: '#06b6d4' }}
+                      />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* Adjustments panel (only when goal not met) */}
+                {!result.success && adjustments && (
+                  <div className="card fade-in" style={{ marginBottom: '1rem', border: '1px solid rgba(6,182,212,0.2)', background: 'rgba(6,182,212,0.04)' }}>
+                    <div className="section-title" style={{ '--tw-before-bg': '#06b6d4' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span style={{ display: 'block', width: 3, height: '1.1em', background: '#06b6d4', borderRadius: 2 }}></span>
+                        To reach your target, try one of these adjustments:
+                      </span>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
+                      <div style={{ background: '#0a0f1e', border: '1px solid #1e293b', borderRadius: 8, padding: '1rem', textAlign: 'center' }}>
+                        <div style={{ fontSize: '0.7rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.5rem' }}>Increase Contributions to</div>
+                        <div style={{ fontFamily: 'IBM Plex Mono', fontSize: '1.1rem', fontWeight: 600, color: '#06b6d4' }}>{fmt(adjustments.reqContrib)}<span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>/yr</span></div>
+                        <div style={{ fontSize: '0.7rem', color: '#334155', marginTop: '0.3rem', fontFamily: 'IBM Plex Mono' }}>
+                          {adjustments.reqContrib > 20000 ? '⚠ Exceeds ISA limit' : `+${fmt(Math.max(0, adjustments.reqContrib - annualContribution))}/yr extra`}
+                        </div>
+                      </div>
+                      <div style={{ background: '#0a0f1e', border: '1px solid #1e293b', borderRadius: 8, padding: '1rem', textAlign: 'center' }}>
+                        <div style={{ fontSize: '0.7rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.5rem' }}>Increase Starting Balance to</div>
+                        <div style={{ fontFamily: 'IBM Plex Mono', fontSize: '1.1rem', fontWeight: 600, color: '#06b6d4' }}>{fmtK(adjustments.reqBalance)}</div>
+                        <div style={{ fontSize: '0.7rem', color: '#334155', marginTop: '0.3rem', fontFamily: 'IBM Plex Mono' }}>
+                          +{fmtK(Math.max(0, adjustments.reqBalance - currentBalance))} more needed
+                        </div>
+                      </div>
+                      <div style={{ background: '#0a0f1e', border: '1px solid #1e293b', borderRadius: 8, padding: '1rem', textAlign: 'center' }}>
+                        <div style={{ fontSize: '0.7rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.5rem' }}>Max Sustainable Income</div>
+                        <div style={{ fontFamily: 'IBM Plex Mono', fontSize: '1.1rem', fontWeight: 600, color: '#10b981' }}>{fmt(adjustments.maxIncome)}<span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>/yr</span></div>
+                        <div style={{ fontSize: '0.7rem', color: '#334155', marginTop: '0.3rem', fontFamily: 'IBM Plex Mono' }}>
+                          {fmt(adjustments.maxIncome / 12)}/month
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Yearly breakdown table */}
+                <div className="card">
+                  <div className="section-title">Year-by-Year Breakdown</div>
+                  <div style={{ overflowX: 'auto' }}>
+                    <table>
+                      <thead>
+                        <tr>
+                          <th onClick={() => handleSort('age')} className={sortCol === 'age' ? 'sort-active' : ''} style={{ textAlign: 'left', cursor: 'pointer' }}>
+                            Age<SortIndicator col="age" />
+                          </th>
+                          <th onClick={() => handleSort('contributions')} className={sortCol === 'contributions' ? 'sort-active' : ''} style={{ cursor: 'pointer' }}>
+                            Contributions<SortIndicator col="contributions" />
+                          </th>
+                          <th onClick={() => handleSort('withdrawals')} className={sortCol === 'withdrawals' ? 'sort-active' : ''} style={{ cursor: 'pointer' }}>
+                            Withdrawals<SortIndicator col="withdrawals" />
+                          </th>
+                          <th onClick={() => handleSort('balance')} className={sortCol === 'balance' ? 'sort-active' : ''} style={{ cursor: 'pointer' }}>
+                            Balance<SortIndicator col="balance" />
+                          </th>
+                          <th onClick={() => handleSort('potGrowth')} className={sortCol === 'potGrowth' ? 'sort-active' : ''} style={{ cursor: 'pointer' }}>
+                            Pot Growth<SortIndicator col="potGrowth" />
+                          </th>
+                          <th onClick={() => handleSort('fees')} className={sortCol === 'fees' ? 'sort-active' : ''} style={{ cursor: 'pointer' }}>
+                            Fees<SortIndicator col="fees" />
+                          </th>
+                          <th onClick={() => handleSort('cumulativeFees')} className={sortCol === 'cumulativeFees' ? 'sort-active' : ''} style={{ cursor: 'pointer' }}>
+                            Cumul. Fees<SortIndicator col="cumulativeFees" />
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {tableRows.map((row, i) => {
+                          let rowClass = '';
+                          if (row.isRetirementStart) rowClass = 'transition-row';
+                          else if (row.runOut) rowClass = 'danger-row';
+                          return (
+                            <tr key={row.age} className={rowClass}>
+                              <td>
+                                {row.age}
+                                {row.isRetirementStart && (
+                                  <span style={{ marginLeft: 6, background: 'rgba(6,182,212,0.15)', color: '#06b6d4', border: '1px solid rgba(6,182,212,0.3)', borderRadius: 3, fontSize: '0.62rem', fontFamily: 'IBM Plex Mono', padding: '1px 5px' }}>RETIRE</span>
+                                )}
+                                {row.runOut && (
+                                  <span style={{ marginLeft: 6, background: 'rgba(244,63,94,0.15)', color: '#f43f5e', border: '1px solid rgba(244,63,94,0.3)', borderRadius: 3, fontSize: '0.62rem', fontFamily: 'IBM Plex Mono', padding: '1px 5px' }}>EMPTY</span>
+                                )}
+                              </td>
+                              <td style={{ color: row.contributions > 0 ? '#10b981' : '#334155' }}>
+                                {row.contributions > 0 ? fmt(row.contributions) : '—'}
+                              </td>
+                              <td style={{ color: row.withdrawals > 0 ? '#f43f5e' : '#334155' }}>
+                                {row.withdrawals > 0 ? fmt(row.withdrawals) : '—'}
+                              </td>
+                              <td style={{ color: row.balance > 0 ? '#f1f5f9' : '#f43f5e', fontWeight: row.balance > 0 ? 400 : 700 }}>
+                                {fmt(row.balance)}
+                              </td>
+                              <td style={{ color: '#94a3b8' }}>{fmt(row.potGrowth)}</td>
+                              <td style={{ color: '#94a3b8' }}>{fmt(row.fees)}</td>
+                              <td style={{ color: '#94a3b8' }}>{fmt(row.cumulativeFees)}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {!result && isValid && (
+              <div className="card" style={{ textAlign: 'center', padding: '3rem' }}>
+                <div style={{ color: '#334155', fontSize: '0.9rem' }}>Adjust inputs to see results</div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Info footer */}
+        <div style={{ marginTop: '2.5rem', borderTop: '1px solid #1e293b', paddingTop: '1.5rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
+          <div>
+            <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.4rem' }}>What is ISA Bridging?</div>
+            <p style={{ fontSize: '0.77rem', color: '#334155', lineHeight: 1.6 }}>
+              Using your Stocks & Shares ISA to fund living costs between early retirement and the age you can access your pension (currently 55, rising to 57 in 2028).
+            </p>
+          </div>
+          <div>
+            <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.4rem' }}>ISA Rules 2025/26</div>
+            <p style={{ fontSize: '0.77rem', color: '#334155', lineHeight: 1.6 }}>
+              Annual ISA allowance is £20,000. Withdrawals from Stocks & Shares ISAs are free of UK income tax and capital gains tax.
+            </p>
+          </div>
+          <div>
+            <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.4rem' }}>Assumptions</div>
+            <p style={{ fontSize: '0.77rem', color: '#334155', lineHeight: 1.6 }}>
+              Growth and fees are applied annually. The income target is the post-tax amount needed. No inflation adjustment is applied by default.
+            </p>
+          </div>
+          <div>
+            <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.4rem' }}>Disclaimer</div>
+            <p style={{ fontSize: '0.77rem', color: '#334155', lineHeight: 1.6 }}>
+              This calculator is for illustrative purposes only and does not constitute financial advice. Consult a qualified adviser before making retirement decisions.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+</body>
+</html>
