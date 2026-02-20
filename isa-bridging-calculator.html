@@ -496,19 +496,24 @@ function Toggle({ checked, onChange }) {
 
 // ─── Input with prefix/suffix ─────────────────────────────────────────────────
 function PrefixInput({ prefix, suffix, value, onChange, placeholder, min, max, step }) {
+  const [local, setLocal] = React.useState(String(value));
+  React.useEffect(() => { setLocal(String(value)); }, [value]);
   return (
     <div style={{ position: 'relative' }}>
       {prefix && <span className="input-prefix">{prefix}</span>}
       <input
-        type="number"
+        type="text"
+        inputMode="decimal"
         className="input-field"
         style={{ paddingLeft: prefix ? '1.8rem' : '0.9rem', paddingRight: suffix ? '2.5rem' : '0.9rem' }}
-        value={value}
-        onChange={e => onChange(Number(e.target.value))}
+        value={local}
+        onChange={e => {
+          setLocal(e.target.value);
+          const v = parseFloat(e.target.value);
+          if (!isNaN(v)) onChange(v);
+        }}
+        onBlur={() => setLocal(String(value))}
         placeholder={placeholder}
-        min={min}
-        max={max}
-        step={step || 1}
       />
       {suffix && <span className="input-suffix">{suffix}</span>}
     </div>

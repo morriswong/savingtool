@@ -277,7 +277,8 @@ function NumInput({ value, onChange, prefix, suffix, min = 0, max, step = 1, dis
     <div style={{ position: 'relative' }}>
       {prefix && <span className="input-prefix">{prefix}</span>}
       <input
-        type="number"
+        type="text"
+        inputMode="decimal"
         className="input-field"
         style={{
           opacity: disabled ? 0.5 : 1,

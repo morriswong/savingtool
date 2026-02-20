@@ -294,7 +294,8 @@ function NumInput({ value, onChange, prefix = '£', suffix, min = 0, max, step =
     <div style={{ position: 'relative' }}>
       {prefix && <span className="input-prefix" style={{ opacity: disabled ? 0.4 : 1 }}>{prefix}</span>}
       <input
-        type="number"
+        type="text"
+        inputMode="decimal"
         className="input-field"
         style={{ paddingLeft: prefix ? '1.8rem' : '0.9rem', paddingRight: suffix ? '2.2rem' : '0.9rem', opacity: disabled ? 0.5 : 1, cursor: disabled ? 'not-allowed' : 'auto' }}
         value={local}
