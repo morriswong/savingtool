@@ -114,6 +114,36 @@
     .sub-input { background: rgba(16,185,129,0.04); border: 1px solid rgba(16,185,129,0.15); border-radius: 8px; padding: 0.75rem; margin-top: 0.5rem; }
     @media (max-width: 1100px) { .layout-cols { flex-direction: column !important; } }
     @media (max-width: 700px) { .stats-grid { grid-template-columns: 1fr 1fr !important; } }
+    .hamburger-btn {
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 5px;
+      width: 36px;
+      height: 36px;
+      background: none;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      cursor: pointer;
+      padding: 0;
+      flex-shrink: 0;
+    }
+    .hamburger-btn span { display: block; width: 18px; height: 2px; background: #94a3b8; border-radius: 2px; transition: all 0.25s; }
+    .hamburger-btn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hamburger-btn.open span:nth-child(2) { opacity: 0; }
+    .hamburger-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+    .mobile-nav { display: none; flex-direction: column; background: #111827; border-top: 1px solid #1e293b; }
+    .mobile-nav a { display: block; padding: 0.75rem 1.5rem; font-size: 0.9rem; color: #94a3b8; text-decoration: none; border-bottom: 1px solid #1e293b; transition: color 0.15s, background 0.15s; }
+    .mobile-nav a:hover { color: #f1f5f9; background: rgba(255,255,255,0.03); }
+    .mobile-nav .mobile-nav-section { padding: 0.4rem 1.5rem 0.2rem; font-size: 0.68rem; color: #334155; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; }
+    .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .table-scroll .breakdown-row { min-width: 420px; }
+    @media (max-width: 768px) {
+      .hamburger-btn { display: flex; }
+      .desktop-nav { display: none !important; }
+      .mobile-nav { display: flex; }
+    }
   </style>
 </head>
 <body>
@@ -378,6 +408,7 @@ function Collapsible({ title, defaultOpen = false, children }) {
 // ─── Main App ──────────────────────────────────────────────────────────────────
 function App() {
   const [navOpen, setNavOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Inputs
   const [dayRate, setDayRate] = useState(300);
@@ -474,7 +505,8 @@ function App() {
               Saving<span style={{ color: '#10b981' }}>Tool</span>
             </span>
           </a>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.75rem' }}>
+          {/* Desktop nav */}
+          <div className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: '1.75rem' }}>
             <a href="index.html" className="nav-link" style={{ textDecoration: 'none' }}>Home</a>
             <div style={{ position: 'relative' }} onMouseEnter={() => setNavOpen(true)} onMouseLeave={() => setNavOpen(false)}>
               <span className="nav-link" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
@@ -489,6 +521,7 @@ function App() {
                     { label: 'Umbrella Calculator', href: 'umbrella-calculator.html' },
                     { label: 'ISA Bridging', href: 'isa-bridging-calculator.html' },
                     { label: 'Mortgage Calculator', href: 'mortgage-calculator.html' },
+                    { label: 'How Much Do I Need?', href: 'how-much-do-i-need-calculator.html' },
                   ].map(item => (
                     <a key={item.label} href={item.href} className="dropdown-item">{item.label}</a>
                   ))}
@@ -500,7 +533,27 @@ function App() {
               ADVANCED
             </span>
           </div>
+          {/* Hamburger */}
+          <button className={`hamburger-btn${mobileMenuOpen ? ' open' : ''}`} onClick={() => setMobileMenuOpen(o => !o)} aria-label="Toggle menu">
+            <span /><span /><span />
+          </button>
         </div>
+        {mobileMenuOpen && (
+          <div className="mobile-nav">
+            <span className="mobile-nav-section">Navigation</span>
+            <a href="index.html">Home</a>
+            <span className="mobile-nav-section">Calculators</span>
+            {[
+              ['Salary & Tax Calculator', 'index.html'],
+              ['Mortgage Calculator', 'mortgage-calculator.html'],
+              ['ISA Bridging Calculator', 'isa-bridging-calculator.html'],
+              ['IR35 Calculator', 'ir35-calculator.html'],
+              ['Umbrella Calculator', 'umbrella-calculator.html'],
+              ['How Much Do I Need?', 'how-much-do-i-need-calculator.html'],
+            ].map(([label, href]) => <a key={label} href={href}>{label}</a>)}
+            <a href="#">Blog</a>
+          </div>
+        )}
       </nav>
 
       {/* ── HERO ── */}

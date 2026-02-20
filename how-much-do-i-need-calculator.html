@@ -264,6 +264,36 @@
       border: 1px solid #1e293b !important;
       border-radius: 8px !important;
     }
+    .hamburger-btn {
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 5px;
+      width: 36px;
+      height: 36px;
+      background: none;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      cursor: pointer;
+      padding: 0;
+      flex-shrink: 0;
+    }
+    .hamburger-btn span { display: block; width: 18px; height: 2px; background: #94a3b8; border-radius: 2px; transition: all 0.25s; }
+    .hamburger-btn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hamburger-btn.open span:nth-child(2) { opacity: 0; }
+    .hamburger-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+    .mobile-nav { display: none; flex-direction: column; background: #111827; border-top: 1px solid #1e293b; }
+    .mobile-nav a { display: block; padding: 0.75rem 1.5rem; font-size: 0.9rem; color: #94a3b8; text-decoration: none; border-bottom: 1px solid #1e293b; transition: color 0.15s, background 0.15s; }
+    .mobile-nav a:hover { color: #f1f5f9; background: rgba(255,255,255,0.03); }
+    .mobile-nav .mobile-nav-section { padding: 0.4rem 1.5rem 0.2rem; font-size: 0.68rem; color: #334155; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; }
+    .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .table-scroll .sens-row { min-width: 480px; }
+    @media (max-width: 768px) {
+      .hamburger-btn { display: flex; }
+      .desktop-nav { display: none !important; }
+      .mobile-nav { display: flex; }
+    }
   </style>
 </head>
 <body>
@@ -405,6 +435,7 @@ function App() {
   const [scotland, setScotland] = useState(false);
   const [includeStatePension, setIncludeStatePension] = useState(true);
   const [navOpen, setNavOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const STATE_PENSION = 11502;
   const STATE_PENSION_AGE = 68;
@@ -634,7 +665,8 @@ function App() {
               Saving<span style={{ color: '#10b981' }}>Tool</span>
             </span>
           </a>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.75rem' }}>
+          {/* Desktop nav */}
+          <div className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: '1.75rem' }}>
             <a href="index.html" className="nav-link">Home</a>
             <div style={{ position: 'relative' }} onMouseEnter={() => setNavOpen(true)} onMouseLeave={() => setNavOpen(false)}>
               <span className="nav-link" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
@@ -661,7 +693,27 @@ function App() {
               ADVANCED
             </span>
           </div>
+          {/* Hamburger */}
+          <button className={`hamburger-btn${mobileMenuOpen ? ' open' : ''}`} onClick={() => setMobileMenuOpen(o => !o)} aria-label="Toggle menu">
+            <span /><span /><span />
+          </button>
         </div>
+        {mobileMenuOpen && (
+          <div className="mobile-nav">
+            <span className="mobile-nav-section">Navigation</span>
+            <a href="index.html">Home</a>
+            <span className="mobile-nav-section">Calculators</span>
+            {[
+              ['Salary & Tax Calculator', 'index.html'],
+              ['Mortgage Calculator', 'mortgage-calculator.html'],
+              ['ISA Bridging Calculator', 'isa-bridging-calculator.html'],
+              ['IR35 Calculator', 'ir35-calculator.html'],
+              ['Umbrella Calculator', 'umbrella-calculator.html'],
+              ['How Much Do I Need?', 'how-much-do-i-need-calculator.html'],
+            ].map(([label, href]) => <a key={label} href={href}>{label}</a>)}
+            <a href="#">Blog</a>
+          </div>
+        )}
       </nav>
 
       {/* ── Hero ── */}
@@ -980,16 +1032,17 @@ function App() {
           <div className="card fade-in">
             <SectionTitle>Sensitivity — Different Income Levels</SectionTitle>
 
-            {/* Header */}
-            <div className="sens-row" style={{ marginBottom: '0.25rem' }}>
-              <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 600 }}>Desired Income</span>
-              <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 600, textAlign: 'right' }}>Required Pot ({mode === 'swr' ? `${swr}% SWR` : `to ${depleteAge}`})</span>
-              <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 600, textAlign: 'right' }}>After-Tax Income</span>
-              <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 600, textAlign: 'right' }}>Monthly</span>
-            </div>
-            <div style={{ borderTop: '1px solid #1e293b', paddingTop: '0.25rem' }}>
-              {results.sensRows.map((row) => (
-                <div key={row.income} className={`sens-row${row.isSelected ? ' highlight' : ''}`}>
+            {/* Header + rows – horizontally scrollable on mobile */}
+            <div className="table-scroll">
+              <div className="sens-row" style={{ marginBottom: '0.25rem' }}>
+                <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 600 }}>Desired Income</span>
+                <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 600, textAlign: 'right' }}>Required Pot ({mode === 'swr' ? `${swr}% SWR` : `to ${depleteAge}`})</span>
+                <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 600, textAlign: 'right' }}>After-Tax Income</span>
+                <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 600, textAlign: 'right' }}>Monthly</span>
+              </div>
+              <div style={{ borderTop: '1px solid #1e293b', paddingTop: '0.25rem' }}>
+                {results.sensRows.map((row) => (
+                  <div key={row.income} className={`sens-row${row.isSelected ? ' highlight' : ''}`}>
                   <span className="mono" style={{ fontSize: '0.82rem', color: row.isSelected ? '#10b981' : '#f1f5f9', fontWeight: row.isSelected ? 600 : 400 }}>
                     {fmt(row.income)}
                     {row.isSelected && <span style={{ marginLeft: 4, fontSize: '0.65rem', color: '#10b981', background: 'rgba(16,185,129,0.15)', borderRadius: 3, padding: '1px 4px' }}>you</span>}
@@ -1005,6 +1058,7 @@ function App() {
                   </span>
                 </div>
               ))}
+              </div>
             </div>
             <p style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '0.75rem' }}>
               After-tax income uses 2025/26 UK income tax bands ({scotland ? 'Scotland' : 'England/Wales/NI'}).

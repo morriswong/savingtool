@@ -281,6 +281,70 @@
       .stat-value { font-size: 1.2rem; }
       .card { padding: 1rem; }
     }
+    .hamburger-btn {
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 5px;
+      width: 36px;
+      height: 36px;
+      background: none;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      cursor: pointer;
+      padding: 0;
+      flex-shrink: 0;
+    }
+    .hamburger-btn span {
+      display: block;
+      width: 18px;
+      height: 2px;
+      background: #94a3b8;
+      border-radius: 2px;
+      transition: all 0.25s;
+    }
+    .hamburger-btn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hamburger-btn.open span:nth-child(2) { opacity: 0; }
+    .hamburger-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+    .mobile-nav {
+      display: none;
+      flex-direction: column;
+      background: #111827;
+      border-top: 1px solid #1e293b;
+    }
+    .mobile-nav a, .mobile-nav span.mobile-nav-item {
+      display: block;
+      padding: 0.75rem 1.5rem;
+      font-size: 0.9rem;
+      color: #94a3b8;
+      text-decoration: none;
+      border-bottom: 1px solid #1e293b;
+      cursor: pointer;
+      transition: color 0.15s, background 0.15s;
+    }
+    .mobile-nav a:hover { color: #f1f5f9; background: rgba(255,255,255,0.03); }
+    .mobile-nav .mobile-nav-section {
+      padding: 0.4rem 1.5rem 0.2rem;
+      font-size: 0.68rem;
+      color: #334155;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: 700;
+      border-bottom: none;
+    }
+    .table-scroll {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .table-scroll table {
+      min-width: 520px;
+    }
+    @media (max-width: 768px) {
+      .hamburger-btn { display: flex; }
+      .desktop-nav { display: none !important; }
+      .mobile-nav { display: flex; }
+    }
   </style>
 </head>
 <body>
@@ -393,12 +457,22 @@ function calcLBTT(price, firstTimeBuyer) {
 // ─── Nav ──────────────────────────────────────────────────────────────────────
 function Nav() {
   const [open, setOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const ref = useRef(null);
   useEffect(() => {
     const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
+
+  const calcLinks = [
+    ['Salary & Tax Calculator', 'index.html'],
+    ['Mortgage Calculator', 'mortgage-calculator.html'],
+    ['ISA Bridging Calculator', 'isa-bridging-calculator.html'],
+    ['IR35 Calculator', 'ir35-calculator.html'],
+    ['Umbrella Calculator', 'umbrella-calculator.html'],
+    ['How Much Do I Need?', 'how-much-do-i-need-calculator.html'],
+  ];
 
   return (
     <nav style={{ background: 'rgba(10,15,30,0.95)', borderBottom: '1px solid #1e293b', backdropFilter: 'blur(12px)', position: 'sticky', top: 0, zIndex: 50 }}>
@@ -409,33 +483,47 @@ function Nav() {
               Saving<span style={{ color: '#10b981' }}>Tool</span>
             </span>
           </a>
-          <div ref={ref} style={{ position: 'relative' }}>
-            <button
-              onClick={() => setOpen(o => !o)}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem', color: open ? '#f1f5f9' : '#94a3b8', fontSize: '0.85rem', fontFamily: 'Sora', fontWeight: 500, transition: 'color 0.2s' }}
-            >
-              Calculators
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" style={{ transition: 'transform 0.2s', transform: open ? 'rotate(180deg)' : 'none' }}>
-                <path d="M5 7L1 3h8z"/>
-              </svg>
-            </button>
-            {open && (
-              <div className="dropdown-menu">
-                <a href="index.html" style={{ textDecoration: 'none' }}>
-                  <div className="dropdown-item">Salary &amp; Tax Calculator</div>
-                </a>
-                <div className="dropdown-item" style={{ color: '#10b981' }}>
-                  Mortgage Calculator
+          {/* Desktop nav */}
+          <div className="desktop-nav" ref={ref} style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '2rem' }}>
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={() => setOpen(o => !o)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem', color: open ? '#f1f5f9' : '#94a3b8', fontSize: '0.85rem', fontFamily: 'Sora', fontWeight: 500, transition: 'color 0.2s' }}
+              >
+                Calculators
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" style={{ transition: 'transform 0.2s', transform: open ? 'rotate(180deg)' : 'none' }}>
+                  <path d="M5 7L1 3h8z"/>
+                </svg>
+              </button>
+              {open && (
+                <div className="dropdown-menu">
+                  {calcLinks.map(([label, href]) => (
+                    <a key={label} href={href} className="dropdown-item" style={{ textDecoration: 'none', display: 'block' }}>{label}</a>
+                  ))}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
+            <a href="#" className="nav-link" style={{ textDecoration: 'none' }}>Blog</a>
           </div>
-          <a href="#" className="nav-link" style={{ textDecoration: 'none' }}>Blog</a>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <span style={{ background: 'rgba(16,185,129,0.15)', color: '#10b981', border: '1px solid rgba(16,185,129,0.3)', borderRadius: '4px', fontSize: '0.65rem', fontFamily: 'IBM Plex Mono', padding: '2px 7px', letterSpacing: '0.06em' }}>ADVANCED</span>
+          <span className="desktop-nav" style={{ background: 'rgba(16,185,129,0.15)', color: '#10b981', border: '1px solid rgba(16,185,129,0.3)', borderRadius: '4px', fontSize: '0.65rem', fontFamily: 'IBM Plex Mono', padding: '2px 7px', letterSpacing: '0.06em' }}>ADVANCED</span>
+          {/* Hamburger */}
+          <button className={`hamburger-btn${mobileOpen ? ' open' : ''}`} onClick={() => setMobileOpen(o => !o)} aria-label="Toggle menu">
+            <span /><span /><span />
+          </button>
         </div>
       </div>
+      {/* Mobile nav */}
+      {mobileOpen && (
+        <div className="mobile-nav">
+          <span className="mobile-nav-section">Navigation</span>
+          <a href="#">Home</a>
+          <span className="mobile-nav-section">Calculators</span>
+          {calcLinks.map(([label, href]) => <a key={label} href={href}>{label}</a>)}
+          <a href="#">Blog</a>
+        </div>
+      )}
     </nav>
   );
 }
@@ -990,7 +1078,7 @@ function App() {
                   <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.75rem', fontWeight: 600 }}>
                     SDLT Bands (England, 2025)
                   </div>
-                  <table>
+                  <div className="table-scroll"><table>
                     <thead>
                       <tr>
                         <th style={{ textAlign: 'left' }}>Band</th>
@@ -1050,7 +1138,7 @@ function App() {
                         <td style={{ fontWeight: 700 }}>{fmt(stampDuty)}</td>
                       </tr>
                     </tbody>
-                  </table>
+                  </table></div>
                   {firstTimeBuyer && propertyValue > 625000 && (
                     <div style={{ marginTop: '0.75rem', background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.2)', borderRadius: 8, padding: '0.6rem 0.8rem', fontSize: '0.75rem', color: '#f43f5e' }}>
                       First-time buyer relief not available above £625,000 — standard rates apply.
@@ -1064,7 +1152,7 @@ function App() {
                   <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.75rem', fontWeight: 600 }}>
                     LBTT Bands (Scotland, 2025)
                   </div>
-                  <table>
+                  <div className="table-scroll"><table>
                     <thead>
                       <tr>
                         <th style={{ textAlign: 'left' }}>Band</th>
@@ -1123,7 +1211,7 @@ function App() {
                         );
                       })()}
                     </tbody>
-                  </table>
+                  </table></div>
                 </div>
               )}
             </div>

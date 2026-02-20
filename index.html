@@ -229,6 +229,73 @@
     @media (max-width: 1024px) {
       .two-col { flex-direction: column !important; }
     }
+    .hamburger-btn {
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 5px;
+      width: 36px;
+      height: 36px;
+      background: none;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      cursor: pointer;
+      padding: 0;
+      flex-shrink: 0;
+    }
+    .hamburger-btn span {
+      display: block;
+      width: 18px;
+      height: 2px;
+      background: #94a3b8;
+      border-radius: 2px;
+      transition: all 0.25s;
+    }
+    .hamburger-btn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hamburger-btn.open span:nth-child(2) { opacity: 0; }
+    .hamburger-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+    .mobile-nav {
+      display: none;
+      flex-direction: column;
+      background: #111827;
+      border-top: 1px solid #1e293b;
+    }
+    .mobile-nav a, .mobile-nav span.mobile-nav-item {
+      display: block;
+      padding: 0.75rem 1.5rem;
+      font-size: 0.9rem;
+      color: #94a3b8;
+      text-decoration: none;
+      border-bottom: 1px solid #1e293b;
+      cursor: pointer;
+      transition: color 0.15s, background 0.15s;
+    }
+    .mobile-nav a:hover, .mobile-nav span.mobile-nav-item:hover { color: #f1f5f9; background: rgba(255,255,255,0.03); }
+    .mobile-nav .mobile-nav-section {
+      padding: 0.4rem 1.5rem 0.2rem;
+      font-size: 0.68rem;
+      color: #334155;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: 700;
+      border-bottom: none;
+    }
+    .table-scroll {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .table-scroll .breakdown-row {
+      min-width: 480px;
+    }
+    .table-scroll-header {
+      min-width: 480px;
+    }
+    @media (max-width: 768px) {
+      .hamburger-btn { display: flex; }
+      .desktop-nav { display: none !important; }
+      .mobile-nav { display: flex; }
+    }
     .dropdown-menu {
       position: absolute;
       top: 100%;
@@ -399,6 +466,7 @@ function App() {
   const [surplusPct, setSurplusPct] = useState(100);
 
   const [navOpen, setNavOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // ── Core calculations ────────────────────────────────────────────────────────
   const calc = useMemo(() => {
@@ -634,7 +702,8 @@ function App() {
               Saving<span style={{ color: '#10b981' }}>Tool</span>
             </span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.75rem' }}>
+          {/* Desktop nav */}
+          <div className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: '1.75rem' }}>
             <span className="nav-link">Home</span>
             <div style={{ position: 'relative' }} onMouseEnter={() => setNavOpen(true)} onMouseLeave={() => setNavOpen(false)}>
               <span className="nav-link" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
@@ -661,7 +730,30 @@ function App() {
               ADVANCED
             </span>
           </div>
+          {/* Hamburger button (mobile only) */}
+          <button className={`hamburger-btn${mobileMenuOpen ? ' open' : ''}`} onClick={() => setMobileMenuOpen(o => !o)} aria-label="Toggle menu">
+            <span /><span /><span />
+          </button>
         </div>
+        {/* Mobile nav panel */}
+        {mobileMenuOpen && (
+          <div className="mobile-nav">
+            <span className="mobile-nav-section">Navigation</span>
+            <a href="#">Home</a>
+            <span className="mobile-nav-section">Calculators</span>
+            {[
+              ['Salary & Tax Calculator', 'index.html'],
+              ['Mortgage Calculator', 'mortgage-calculator.html'],
+              ['ISA Bridging Calculator', 'isa-bridging-calculator.html'],
+              ['IR35 Calculator', 'ir35-calculator.html'],
+              ['Umbrella Calculator', 'umbrella-calculator.html'],
+              ['How Much Do I Need?', 'how-much-do-i-need-calculator.html'],
+            ].map(([label, href]) => (
+              <a key={label} href={href}>{label}</a>
+            ))}
+            <a href="#">Blog</a>
+          </div>
+        )}
       </nav>
 
       {/* ── Hero ── */}
@@ -865,36 +957,38 @@ function App() {
               </div>
             </div>
 
-            {/* Header */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr repeat(3, minmax(90px, 1fr))', gap: '0.5rem', padding: '0.35rem 0.5rem', marginBottom: '0.25rem' }}>
-              <div style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Item</div>
-              {['Year','Month','Week'].map(h => (
-                <div key={h} style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'right' }}>{h}</div>
-              ))}
-            </div>
+            {/* Header + rows – horizontally scrollable on mobile */}
+            <div className="table-scroll">
+              <div className="table-scroll-header" style={{ display: 'grid', gridTemplateColumns: '1fr repeat(3, minmax(90px, 1fr))', gap: '0.5rem', padding: '0.35rem 0.5rem', marginBottom: '0.25rem' }}>
+                <div style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Item</div>
+                {['Year','Month','Week'].map(h => (
+                  <div key={h} style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'right' }}>{h}</div>
+                ))}
+              </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-              <Row label="Gross Income" year={calc.gross} month={calc.gross/12} week={calc.gross/52} />
-              <Row
-                label="Pension Contributions (you)"
-                year={calc.employeePensionAmt}
-                month={calc.employeePensionAmt/12}
-                week={calc.employeePensionAmt/52}
-                badge={calc.employeePensionAmt > 0 ? `${fmt(calc.taxRelief)} saved!` : null}
-                subdue={calc.employeePensionAmt === 0}
-              />
-              <Row label="Employer Pension" year={calc.employerPensionAmt} month={calc.employerPensionAmt/12} week={calc.employerPensionAmt/52} subdue={calc.employerPensionAmt === 0} />
-              <Row label="Taxable Income" year={calc.taxableGross} month={calc.taxableGross/12} week={calc.taxableGross/52} />
-              <Row label="Personal Allowance" year={calc.pa} month={calc.pa/12} week={calc.pa/52} subdue />
-              <Row label="National Insurance" year={calc.ni} month={calc.ni/12} week={calc.ni/52} />
-              <Row label="Income Tax" year={calc.tax} month={calc.tax/12} week={calc.tax/52} />
-              {studentLoan && calc.studentLoanAmt > 0 && (
-                <Row label="Student Loan Repayment" year={calc.studentLoanAmt} month={calc.studentLoanAmt/12} week={calc.studentLoanAmt/52} />
-              )}
-              <div style={{ height: 1, background: '#1e293b', margin: '4px 0' }} />
-              <Row label="Take Home Pay" year={calc.takeHome} month={calc.takeHome/12} week={calc.takeHome/52} highlight />
-              <Row label="Total to Pension" year={calc.totalPension} month={calc.totalPension/12} week={calc.totalPension/52} />
-              <Row label="Employer NI Cost" year={calc.employerNI} month={calc.employerNI/12} week={calc.employerNI/52} subdue />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                <Row label="Gross Income" year={calc.gross} month={calc.gross/12} week={calc.gross/52} />
+                <Row
+                  label="Pension Contributions (you)"
+                  year={calc.employeePensionAmt}
+                  month={calc.employeePensionAmt/12}
+                  week={calc.employeePensionAmt/52}
+                  badge={calc.employeePensionAmt > 0 ? `${fmt(calc.taxRelief)} saved!` : null}
+                  subdue={calc.employeePensionAmt === 0}
+                />
+                <Row label="Employer Pension" year={calc.employerPensionAmt} month={calc.employerPensionAmt/12} week={calc.employerPensionAmt/52} subdue={calc.employerPensionAmt === 0} />
+                <Row label="Taxable Income" year={calc.taxableGross} month={calc.taxableGross/12} week={calc.taxableGross/52} />
+                <Row label="Personal Allowance" year={calc.pa} month={calc.pa/12} week={calc.pa/52} subdue />
+                <Row label="National Insurance" year={calc.ni} month={calc.ni/12} week={calc.ni/52} />
+                <Row label="Income Tax" year={calc.tax} month={calc.tax/12} week={calc.tax/52} />
+                {studentLoan && calc.studentLoanAmt > 0 && (
+                  <Row label="Student Loan Repayment" year={calc.studentLoanAmt} month={calc.studentLoanAmt/12} week={calc.studentLoanAmt/52} />
+                )}
+                <div style={{ height: 1, background: '#1e293b', margin: '4px 0', minWidth: 480 }} />
+                <Row label="Take Home Pay" year={calc.takeHome} month={calc.takeHome/12} week={calc.takeHome/52} highlight />
+                <Row label="Total to Pension" year={calc.totalPension} month={calc.totalPension/12} week={calc.totalPension/52} />
+                <Row label="Employer NI Cost" year={calc.employerNI} month={calc.employerNI/12} week={calc.employerNI/52} subdue />
+              </div>
             </div>
 
             {/* Quick summary pills */}
