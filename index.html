@@ -434,6 +434,48 @@ function calcStudentLoan(gross, plan) {
   return Math.max(0, (gross - t) * r);
 }
 
+// ─── Shared Components ────────────────────────────────────────────────────────
+function NumInput({ value, onChange, prefix = '£', suffix, min = 0, max, step = 1, style }) {
+  const [local, setLocal] = useState(String(value));
+  const [focused, setFocused] = useState(false);
+  useEffect(() => { if (!focused) setLocal(String(value)); }, [value, focused]);
+  return (
+    <div style={{ position: 'relative', ...style }}>
+      {prefix && <span className="input-prefix">{prefix}</span>}
+      <input
+        type="text"
+        inputMode="numeric"
+        className="input-field"
+        style={{ paddingLeft: prefix ? '1.8rem' : '0.9rem', paddingRight: suffix ? '2rem' : '0.9rem' }}
+        value={local}
+        onChange={e => {
+          const raw = e.target.value.replace(/[^0-9.]/g, '');
+          setLocal(raw);
+          const v = parseFloat(raw);
+          if (!isNaN(v)) {
+            const clamped = max !== undefined ? Math.min(v, max) : v;
+            if (clamped >= (min || 0)) onChange(clamped);
+          } else if (raw === '' || raw === '.') {
+            onChange(0);
+          }
+        }}
+        onFocus={() => setFocused(true)}
+        onBlur={() => { setFocused(false); setLocal(String(value)); }}
+      />
+      {suffix && <span className="input-suffix">{suffix}</span>}
+    </div>
+  );
+}
+
+function Toggle({ checked, onChange }) {
+  return (
+    <label className="toggle">
+      <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} />
+      <span className="toggle-slider" />
+    </label>
+  );
+}
+
 // ─── Main App ─────────────────────────────────────────────────────────────────
 function App() {
   // ── Inputs ──────────────────────────────────────────────────────────────────
@@ -620,45 +662,6 @@ function App() {
       <div className="val-cell" style={{ color: highlight ? '#10b981' : '#f1f5f9', fontWeight: highlight ? 400 : 400 }}>{fmt(month)}</div>
       <div className="val-cell" style={{ color: highlight ? '#10b981' : '#f1f5f9', fontWeight: highlight ? 400 : 400 }}>{fmt(week)}</div>
     </div>
-  );
-
-  const NumInput = ({ value, onChange, prefix = '£', suffix, min = 0, max, step = 1, style }) => {
-    const [local, setLocal] = useState(String(value));
-    const [focused, setFocused] = useState(false);
-    useEffect(() => { if (!focused) setLocal(String(value)); }, [value, focused]);
-    return (
-      <div style={{ position: 'relative', ...style }}>
-        {prefix && <span className="input-prefix">{prefix}</span>}
-        <input
-          type="text"
-          inputMode="numeric"
-          className="input-field"
-          style={{ paddingLeft: prefix ? '1.8rem' : '0.9rem', paddingRight: suffix ? '2rem' : '0.9rem' }}
-          value={local}
-          onChange={e => {
-            const raw = e.target.value.replace(/[^0-9.]/g, '');
-            setLocal(raw);
-            const v = parseFloat(raw);
-            if (!isNaN(v)) {
-              const clamped = max !== undefined ? Math.min(v, max) : v;
-              if (clamped >= (min || 0)) onChange(clamped);
-            } else if (raw === '' || raw === '.') {
-              onChange(0);
-            }
-          }}
-          onFocus={() => setFocused(true)}
-          onBlur={() => { setFocused(false); setLocal(String(value)); }}
-        />
-        {suffix && <span className="input-suffix">{suffix}</span>}
-      </div>
-    );
-  };
-
-  const Toggle = ({ checked, onChange }) => (
-    <label className="toggle">
-      <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} />
-      <span className="toggle-slider" />
-    </label>
   );
 
   const customTooltip = ({ active, payload, label }) => {
