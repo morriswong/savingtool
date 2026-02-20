@@ -320,7 +320,8 @@ function calcOutside({ dayRate, workingDays, pensionPct, salary, businessExpense
 // ─── Components ────────────────────────────────────────────────────────────────
 function NumInput({ value, onChange, prefix = '£', suffix, min = 0, max, step = 1, disabled }) {
   const [local, setLocal] = useState(String(value));
-  useEffect(() => { setLocal(String(value)); }, [value]);
+  const [focused, setFocused] = useState(false);
+  useEffect(() => { if (!focused) setLocal(String(value)); }, [value, focused]);
   return (
     <div style={{ position: 'relative' }}>
       {prefix && <span className="input-prefix" style={{ opacity: disabled ? 0.4 : 1 }}>{prefix}</span>}
@@ -337,7 +338,8 @@ function NumInput({ value, onChange, prefix = '£', suffix, min = 0, max, step =
           const v = parseFloat(e.target.value);
           if (!isNaN(v)) onChange(v);
         }}
-        onBlur={() => setLocal(String(value))}
+        onFocus={() => setFocused(true)}
+        onBlur={() => { setFocused(false); setLocal(String(value)); }}
       />
       {suffix && <span className="input-suffix" style={{ opacity: disabled ? 0.4 : 1 }}>{suffix}</span>}
     </div>
