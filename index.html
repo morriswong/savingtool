@@ -229,6 +229,7 @@
     .fade-in { animation: fadeIn 0.3s ease; }
     @media (max-width: 1024px) {
       .two-col { flex-direction: column !important; }
+      .two-col > div { width: 100% !important; box-sizing: border-box; }
     }
     .hamburger-btn {
       display: none;
@@ -286,6 +287,7 @@
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
       width: 100%;
+      overscroll-behavior-x: contain;
     }
     .table-scroll .breakdown-row {
       min-width: 480px;
