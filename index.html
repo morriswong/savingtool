@@ -1158,7 +1158,7 @@ function App() {
             <div className="section-title">Quick Salary Lookup</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))', gap: '0.5rem' }}>
               {salaryLinks.map(s => (
-                <div key={s} className="salary-link" onClick={() => setSalary(s)}>
+                <div key={s} className="salary-link" onClick={() => { setSalary(s); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
                   {s >= 1000 ? `£${(s/1000).toFixed(s % 1000 === 0 ? 0 : 0)}k` : fmt(s)}
                 </div>
               ))}
